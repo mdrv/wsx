@@ -4,6 +4,10 @@ import { css } from '../../styled-system/css'
 
 <header
 	class={css({
+		position: 'fixed',
+		top: 0,
+		left: 0,
+		right: 0,
 		height: '4rem',
 		borderBottom: '1px solid',
 		borderColor: 'gray.200',
@@ -12,8 +16,45 @@ import { css } from '../../styled-system/css'
 		alignItems: 'center',
 		padding: { base: '0 1rem', md: '0 1.5rem' },
 		gap: { base: '1rem', md: '2rem' },
+		zIndex: 50,
 	})}
 >
+	<!-- Mobile menu button -->
+	<button
+		id='mobile-menu-button'
+		class={css({
+			display: { base: 'flex', md: 'none' },
+			alignItems: 'center',
+			justifyContent: 'center',
+			width: '2.5rem',
+			height: '2.5rem',
+			color: 'gray.600',
+			cursor: 'pointer',
+			border: 'none',
+			background: 'transparent',
+			padding: 0,
+			_hover: {
+				color: 'gray.900',
+			},
+		})}
+		aria-label='Toggle menu'
+	>
+		<svg
+			width='24'
+			height='24'
+			viewBox='0 0 24 24'
+			fill='none'
+			stroke='currentColor'
+			stroke-width='2'
+			stroke-linecap='round'
+			stroke-linejoin='round'
+		>
+			<line x1='3' y1='12' x2='21' y2='12'></line>
+			<line x1='3' y1='6' x2='21' y2='6'></line>
+			<line x1='3' y1='18' x2='21' y2='18'></line>
+		</svg>
+	</button>
+
 	<a
 		href='/wsx/'
 		class={css({
