@@ -7,7 +7,7 @@
 		"prepare": "panda codegen",
 		"d": "astro dev",
 		"s": "astro start",
-		"b": "astro build",
+		"b": "astro build && pagefind --site dist",
 		"p": "astro preview"
 	},
 	"devDependencies": {
@@ -16,7 +16,8 @@
 		"@pandacss/astro": "^0.25.0",
 		"@pandacss/dev": "^1.8.1",
 		"@types/bun": "latest",
-		"astro": "^5.16.11"
+		"astro": "^5.16.11",
+		"pagefind": "^1.4.0"
 	},
 	"peerDependencies": {
 		"typescript": "^5.9.3"

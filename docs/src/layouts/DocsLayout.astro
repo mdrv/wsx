@@ -22,6 +22,20 @@ const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 		<title>{fullTitle}</title>
 		{description && <meta name='description' content={description} />}
 		<link rel='icon' type='image/svg+xml' href='/wsx/favicon.svg' />
+
+		<!-- Pagefind CSS -->
+		<link href='/wsx/pagefind/pagefind-ui.css' rel='stylesheet'>
+
+		<script is:inline>
+		// Apply theme before page renders to prevent flash
+		;(function() {
+			const theme = localStorage.getItem('theme') || 'light'
+			if (theme === 'dark') {
+				document.documentElement.classList.add('dark')
+			}
+		})()
+		</script>
+
 		<script is:inline>
 		// Mobile menu toggle
 		document.addEventListener('DOMContentLoaded', () => {
@@ -44,17 +58,58 @@ const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 
 			menuButton?.addEventListener('click', toggleMenu)
 			overlay?.addEventListener('click', toggleMenu)
+
+			// Close mobile menu when clicking navigation links
+			const navLinks = mobileMenu?.querySelectorAll('a')
+			navLinks?.forEach(link => {
+				link.addEventListener('click', () => {
+					if (mobileMenu.classList.contains('open')) {
+						toggleMenu()
+					}
+				})
+			})
 		})
 		</script>
+
 		<style is:global>
+		/* Dark mode variables */
+		:root {
+			--bg-primary: white;
+			--bg-secondary: #f9fafb;
+			--bg-tertiary: #f3f4f6;
+			--text-primary: #111827;
+			--text-secondary: #4b5563;
+			--text-tertiary: #6b7280;
+			--border-color: #e5e7eb;
+			--code-bg: #f3f4f6;
+			--overlay-bg: rgba(0, 0, 0, 0.5);
+		}
+
+		.dark {
+			--bg-primary: #1f2937;
+			--bg-secondary: #111827;
+			--bg-tertiary: #374151;
+			--text-primary: #f9fafb;
+			--text-secondary: #d1d5db;
+			--text-tertiary: #9ca3af;
+			--border-color: #374151;
+			--code-bg: #374151;
+			--overlay-bg: rgba(0, 0, 0, 0.75);
+		}
+
+		#site-header {
+			background-color: var(--bg-primary) !important;
+			border-color: var(--border-color) !important;
+		}
+
 		#mobile-menu {
 			position: fixed;
 			top: 4rem;
 			left: -100%;
 			width: 16rem;
 			height: calc(100vh - 4rem);
-			background: white;
-			border-right: 1px solid #e5e7eb;
+			background: var(--bg-primary);
+			border-right: 1px solid var(--border-color);
 			overflow-y: auto;
 			transition: left 0.3s ease;
 			z-index: 40;
@@ -68,7 +123,7 @@ const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 			left: 0;
 			width: 100%;
 			height: calc(100vh - 4rem);
-			background: rgba(0, 0, 0, 0.5);
+			background: var(--overlay-bg);
 			opacity: 0;
 			pointer-events: none;
 			transition: opacity 0.3s ease;
@@ -78,6 +133,23 @@ const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 			opacity: 1;
 			pointer-events: auto;
 		}
+
+		/* Pagefind dark mode */
+		.dark .pagefind-ui__search-input {
+			background-color: var(--bg-tertiary);
+			color: var(--text-primary);
+			border-color: var(--border-color);
+		}
+		.dark .pagefind-ui__result {
+			background-color: var(--bg-secondary);
+			border-color: var(--border-color);
+		}
+		.dark .pagefind-ui__result-title {
+			color: var(--text-primary);
+		}
+		.dark .pagefind-ui__result-excerpt {
+			color: var(--text-secondary);
+		}
 		</style>
 	</head>
 	<body
@@ -86,6 +158,9 @@ const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 			display: 'flex',
 			flexDirection: 'column',
 			minHeight: '100vh',
+			backgroundColor: 'var(--bg-primary)',
+			color: 'var(--text-primary)',
+			transition: 'background-color 0.3s, color 0.3s',
 		})}
 	>
 		<Header />
@@ -111,9 +186,8 @@ const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 				class={css({
 					display: { base: 'none', md: 'block' },
 					width: '16rem',
-					borderRight: '1px solid',
-					borderColor: 'gray.200',
-					backgroundColor: 'white',
+					borderRight: '1px solid var(--border-color)',
+					backgroundColor: 'var(--bg-primary)',
 					overflowY: 'auto',
 				})}
 			>
@@ -129,31 +203,35 @@ const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 					maxWidth: '56rem',
 				})}
 			>
+				<!-- Search UI -->
+				<div id='search' class={css({ marginBottom: '2rem' })}></div>
+
 				<article
 					class={css({
 						'& h1': {
 							fontSize: '3xl',
 							fontWeight: 'bold',
 							marginBottom: '1rem',
-							color: 'gray.900',
+							color: 'var(--text-primary)',
 						},
 						'& h2': {
 							fontSize: '2xl',
 							fontWeight: 'bold',
 							marginTop: '2rem',
 							marginBottom: '1rem',
-							color: 'gray.900',
+							color: 'var(--text-primary)',
 						},
 						'& h3': {
 							fontSize: 'xl',
 							fontWeight: 'semibold',
 							marginTop: '1.5rem',
 							marginBottom: '0.75rem',
-							color: 'gray.900',
+							color: 'var(--text-primary)',
 						},
 						'& p': {
 							marginBottom: '1rem',
 							lineHeight: '1.7',
+							color: 'var(--text-secondary)',
 						},
 						'& ul, & ol': {
 							marginBottom: '1rem',
@@ -161,18 +239,21 @@ const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 						},
 						'& li': {
 							marginBottom: '0.5rem',
+							color: 'var(--text-secondary)',
 						},
 						'& code': {
 							fontFamily: 'mono',
 							fontSize: '0.9em',
-							backgroundColor: 'gray.100',
+							backgroundColor: 'var(--code-bg)',
 							padding: '0.125rem 0.25rem',
 							borderRadius: '0.25rem',
+							color: 'var(--text-primary)',
 						},
 						'& pre': {
 							marginBottom: '1.5rem',
 							borderRadius: 'md',
 							overflow: 'auto',
+							backgroundColor: 'var(--code-bg)',
 						},
 						'& pre code': {
 							backgroundColor: 'transparent',
@@ -185,13 +266,16 @@ const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 						},
 						'& th, & td': {
 							padding: '0.75rem',
-							borderBottom: '1px solid',
-							borderColor: 'gray.200',
+							borderBottom: '1px solid var(--border-color)',
 							textAlign: 'left',
 						},
 						'& th': {
 							fontWeight: 'semibold',
-							backgroundColor: 'gray.50',
+							backgroundColor: 'var(--bg-secondary)',
+							color: 'var(--text-primary)',
+						},
+						'& td': {
+							color: 'var(--text-secondary)',
 						},
 						'& blockquote': {
 							borderLeft: '4px solid',
@@ -199,8 +283,14 @@ const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 							paddingLeft: '1rem',
 							marginLeft: 0,
 							marginBottom: '1rem',
-							color: 'gray.700',
+							color: 'var(--text-tertiary)',
 							fontStyle: 'italic',
+						},
+						'& a': {
+							color: 'brand.600',
+							_hover: {
+								color: 'brand.700',
+							},
 						},
 					})}
 				>
@@ -210,5 +300,18 @@ const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 		</div>
 
 		<Footer />
+
+		<!-- Pagefind Script -->
+		<script is:inline>
+		document.addEventListener('DOMContentLoaded', () => {
+			new window.PagefindUI({
+				element: '#search',
+				showSubResults: true,
+				showImages: false,
+				excerptLength: 15,
+			})
+		})
+		</script>
+		<script src='/wsx/pagefind/pagefind-ui.js' is:inline></script>
 	</body>
 </html>

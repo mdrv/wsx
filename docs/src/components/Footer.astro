@@ -4,11 +4,11 @@ import { css } from '../../styled-system/css'
 
 <footer
 	class={css({
-		borderTop: '1px solid',
-		borderColor: 'gray.200',
-		backgroundColor: 'white',
+		borderTop: '1px solid var(--border-color)',
+		backgroundColor: 'var(--bg-primary)',
 		padding: '2rem 1.5rem',
 		marginTop: 'auto',
+		transition: 'background-color 0.3s, border-color 0.3s',
 	})}
 >
 	<div
@@ -22,7 +22,12 @@ import { css } from '../../styled-system/css'
 			gap: '1rem',
 		})}
 	>
-		<div class={css({ color: 'gray.600', fontSize: 'sm' })}>
+		<div
+			style={{
+				color: 'var(--text-tertiary)',
+				fontSize: '0.875rem',
+			}}
+		>
 			&copy; {new Date().getFullYear()} @mdrv/wsx. MIT License.
 		</div>
 
@@ -32,9 +37,11 @@ import { css } from '../../styled-system/css'
 				target='_blank'
 				rel='noopener noreferrer'
 				class={css({
-					color: 'gray.600',
 					_hover: { color: 'brand.600' },
 				})}
+				style={{
+					color: 'var(--text-tertiary)',
+				}}
 			>
 				GitHub
 			</a>
@@ -43,9 +50,11 @@ import { css } from '../../styled-system/css'
 				target='_blank'
 				rel='noopener noreferrer'
 				class={css({
-					color: 'gray.600',
 					_hover: { color: 'brand.600' },
 				})}
+				style={{
+					color: 'var(--text-tertiary)',
+				}}
 			>
 				Issues
 			</a>
@@ -54,9 +63,11 @@ import { css } from '../../styled-system/css'
 				target='_blank'
 				rel='noopener noreferrer'
 				class={css({
-					color: 'gray.600',
 					_hover: { color: 'brand.600' },
 				})}
+				style={{
+					color: 'var(--text-tertiary)',
+				}}
 			>
 				npm
 			</a>

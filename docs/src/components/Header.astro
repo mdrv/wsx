@@ -3,6 +3,7 @@ import { css } from '../../styled-system/css'
 ---
 
 <header
+	id='site-header'
 	class={css({
 		position: 'fixed',
 		top: 0,
@@ -15,8 +16,9 @@ import { css } from '../../styled-system/css'
 		display: 'flex',
 		alignItems: 'center',
 		padding: { base: '0 1rem', md: '0 1.5rem' },
-		gap: { base: '1rem', md: '2rem' },
+		gap: { base: '0.75rem', md: '2rem' },
 		zIndex: 50,
+		transition: 'background-color 0.3s, border-color 0.3s',
 	})}
 >
 	<!-- Mobile menu button -->
@@ -110,11 +112,71 @@ import { css } from '../../styled-system/css'
 	<div
 		class={css({
 			display: 'flex',
-			gap: '1rem',
+			gap: '0.75rem',
 			alignItems: 'center',
 			marginLeft: 'auto',
 		})}
 	>
+		<!-- Dark mode toggle -->
+		<button
+			id='theme-toggle'
+			class={css({
+				width: '2.5rem',
+				height: '2.5rem',
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'center',
+				color: 'gray.600',
+				cursor: 'pointer',
+				border: 'none',
+				background: 'transparent',
+				padding: 0,
+				borderRadius: 'md',
+				_hover: {
+					color: 'gray.900',
+					backgroundColor: 'gray.100',
+				},
+			})}
+			aria-label='Toggle dark mode'
+		>
+			<svg
+				id='theme-toggle-dark-icon'
+				class='hidden'
+				width='20'
+				height='20'
+				viewBox='0 0 24 24'
+				fill='none'
+				stroke='currentColor'
+				stroke-width='2'
+				stroke-linecap='round'
+				stroke-linejoin='round'
+			>
+				<path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'></path>
+			</svg>
+			<svg
+				id='theme-toggle-light-icon'
+				class='hidden'
+				width='20'
+				height='20'
+				viewBox='0 0 24 24'
+				fill='none'
+				stroke='currentColor'
+				stroke-width='2'
+				stroke-linecap='round'
+				stroke-linejoin='round'
+			>
+				<circle cx='12' cy='12' r='5'></circle>
+				<line x1='12' y1='1' x2='12' y2='3'></line>
+				<line x1='12' y1='21' x2='12' y2='23'></line>
+				<line x1='4.22' y1='4.22' x2='5.64' y2='5.64'></line>
+				<line x1='18.36' y1='18.36' x2='19.78' y2='19.78'></line>
+				<line x1='1' y1='12' x2='3' y2='12'></line>
+				<line x1='21' y1='12' x2='23' y2='12'></line>
+				<line x1='4.22' y1='19.78' x2='5.64' y2='18.36'></line>
+				<line x1='18.36' y1='5.64' x2='19.78' y2='4.22'></line>
+			</svg>
+		</button>
+
 		<a
 			href='https://github.com/mdrv/wsx'
 			target='_blank'
@@ -148,3 +210,36 @@ import { css } from '../../styled-system/css'
 		</a>
 	</div>
 </header>
+
+<script is:inline>
+// Dark mode toggle
+const themeToggle = document.getElementById('theme-toggle')
+const darkIcon = document.getElementById('theme-toggle-dark-icon')
+const lightIcon = document.getElementById('theme-toggle-light-icon')
+const html = document.documentElement
+
+// Check for saved theme preference or default to light mode
+const currentTheme = localStorage.getItem('theme') || 'light'
+
+function setTheme(theme) {
+	if (theme === 'dark') {
+		html.classList.add('dark')
+		darkIcon.classList.add('hidden')
+		lightIcon.classList.remove('hidden')
+	} else {
+		html.classList.remove('dark')
+		darkIcon.classList.remove('hidden')
+		lightIcon.classList.add('hidden')
+	}
+	localStorage.setItem('theme', theme)
+}
+
+// Set initial theme
+setTheme(currentTheme)
+
+// Toggle theme on button click
+themeToggle.addEventListener('click', () => {
+	const newTheme = html.classList.contains('dark') ? 'light' : 'dark'
+	setTheme(newTheme)
+})
+</script>
