@@ -5,9 +5,11 @@ This directory contains working examples demonstrating the library's features.
 ## Examples
 
 ### 01-ping-pong
+
 Basic request/response pattern with one-way notifications.
 
 **Run:**
+
 ```bash
 # Terminal 1 - Start server
 bun v001/examples/01-ping-pong/server.ts
@@ -17,6 +19,7 @@ bun v001/examples/01-ping-pong/client.ts
 ```
 
 **Features:**
+
 - Request/response pattern (`ping` -> `pong`)
 - One-way messages (`notify`)
 - Auto-reconnection
@@ -25,9 +28,11 @@ bun v001/examples/01-ping-pong/client.ts
 ---
 
 ### 02-chat
+
 Multi-user chat room with real-time messaging.
 
 **Run:**
+
 ```bash
 # Terminal 1 - Start server
 bun v001/examples/02-chat/server.ts
@@ -43,6 +48,7 @@ bun v001/examples/02-chat/client.ts charlie lobby
 ```
 
 **Features:**
+
 - Multiple chat rooms
 - Broadcasting messages
 - User join/leave notifications
@@ -51,9 +57,11 @@ bun v001/examples/02-chat/client.ts charlie lobby
 ---
 
 ### 03-auth
+
 Authentication and authorization pattern.
 
 **Run:**
+
 ```bash
 # Terminal 1 - Start server
 bun v001/examples/03-auth/server.ts
@@ -66,6 +74,7 @@ bun v001/examples/03-auth/client.ts wrong-token
 ```
 
 **Features:**
+
 - Token-based authentication
 - Protected endpoints
 - Error handling
@@ -76,6 +85,7 @@ bun v001/examples/03-auth/client.ts wrong-token
 ## Common Patterns
 
 ### Event Definition
+
 ```typescript
 import { z } from 'zod'
 import { defineEvents } from '../../shared/schema.ts'
@@ -89,19 +99,21 @@ const events = defineEvents({
 ```
 
 ### Server Setup
+
 ```typescript
 import { createElysiaWS } from '../../server/index.ts'
 
 const { server, handler } = createElysiaWS(events)
 
 server.onRequest('myEvent', async (payload) => {
-  return { result: 'ok' }
+	return { result: 'ok' }
 })
 
 new Elysia().ws('/ws', handler).listen(3000)
 ```
 
 ### Client Setup
+
 ```typescript
 import { createClient } from '../../client/index.ts'
 

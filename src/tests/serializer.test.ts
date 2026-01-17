@@ -27,9 +27,9 @@ describe('Serializers', () => {
 
 			// Should be ArrayBuffer or Uint8Array/Buffer
 			expect(
-				encoded instanceof ArrayBuffer ||
-					encoded instanceof Uint8Array ||
-					ArrayBuffer.isView(encoded),
+				encoded instanceof ArrayBuffer
+					|| encoded instanceof Uint8Array
+					|| ArrayBuffer.isView(encoded),
 			).toBe(true)
 		})
 	})

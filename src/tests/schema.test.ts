@@ -48,8 +48,6 @@ describe('Schema', () => {
 		// Invalid
 		expect(() => events.test.request!.parse({ count: -1 })).toThrow()
 		expect(() => events.test.request!.parse({ count: 101 })).toThrow()
-		expect(() =>
-			events.test.request!.parse({ count: 'not a number' }),
-		).toThrow()
+		expect(() => events.test.request!.parse({ count: 'not a number' })).toThrow()
 	})
 })

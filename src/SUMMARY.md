@@ -7,18 +7,21 @@ v001 is a complete rewrite of the @mdrv/ws library with a clean, modern architec
 ## What's New
 
 ### Architecture Improvements
+
 - ✅ **Clean Composition** - Replaced complex mixin pattern with straightforward wrapper classes
 - ✅ **Better Separation** - Organized into `client/`, `server/`, and `shared/` directories
 - ✅ **Protocol Versioning** - Built-in version field for future compatibility
 - ✅ **Standalone** - Removed dependency on `@mdrv/m`, all utilities inlined
 
 ### API Improvements
+
 - ✅ **Intuitive Names** - `send()` / `request()` instead of `x` / `w`
 - ✅ **Full Validation** - Runtime Zod validation on both client and server
 - ✅ **Better Errors** - Structured error responses with optional cause
 - ✅ **Request Matching** - Hybrid ID + timestamp matching for reliability
 
 ### Developer Experience
+
 - ✅ **3 Working Examples** - Ping-pong, chat, and auth examples
 - ✅ **Test Suite** - Basic tests for core functionality
 - ✅ **Comprehensive Docs** - README with API reference and migration guide
@@ -59,12 +62,13 @@ v001/
 ## Key Features
 
 ### 1. Type-Safe Events
+
 ```typescript
 const events = defineEvents({
-  myEvent: {
-    request: z.object({ msg: z.string() }),
-    response: z.object({ result: z.number() }),
-  },
+	myEvent: {
+		request: z.object({ msg: z.string() }),
+		response: z.object({ result: z.number() }),
+	},
 })
 
 // Type inference works automatically!
@@ -73,38 +77,42 @@ const result = await client.request('myEvent', { msg: 'hello' })
 ```
 
 ### 2. Request/Response Pattern
+
 ```typescript
 // Client sends request, waits for response
 const response = await client.request('getData', { id: '123' })
 
 // Server handles request
 server.onRequest('getData', async (payload) => {
-  return { data: await fetchData(payload.id) }
+	return { data: await fetchData(payload.id) }
 })
 ```
 
 ### 3. Auto-Reconnection
+
 ```typescript
 const client = createClient(url, events, {
-  maxRetries: Infinity,
-  minReconnectionDelay: 1000,
-  maxReconnectionDelay: 10000,
-  reconnectionDelayGrowFactor: 1.3,
+	maxRetries: Infinity,
+	minReconnectionDelay: 1000,
+	maxReconnectionDelay: 10000,
+	reconnectionDelayGrowFactor: 1.3,
 })
 ```
 
 ### 4. Message Queuing
+
 Messages sent while disconnected are automatically queued and sent when reconnected.
 
 ### 5. Full Validation
+
 ```typescript
 // Both client and server validate with Zod
 const events = defineEvents({
-  sendMessage: {
-    request: z.object({
-      message: z.string().min(1).max(500),
-    }),
-  },
+	sendMessage: {
+		request: z.object({
+			message: z.string().min(1).max(500),
+		}),
+	},
 })
 
 // Invalid messages are rejected automatically
@@ -114,13 +122,13 @@ const events = defineEvents({
 
 ### Old API → New API
 
-| Old | New |
-|-----|-----|
-| `ws.x.eventName(args)` | `client.send('eventName', args)` |
-| `ws.w.eventName(args)` | `await client.request('eventName', args)` |
-| `wsz.respond(e)({ ... })` | `server.onRequest('eventName', handler)` |
-| `wsz.y.eventName(result)` | `connection.respond(event, id, timestamp, result)` |
-| `{ a: schema, s: schema }` | `{ request: schema, response: schema }` |
+| Old                        | New                                                |
+| -------------------------- | -------------------------------------------------- |
+| `ws.x.eventName(args)`     | `client.send('eventName', args)`                   |
+| `ws.w.eventName(args)`     | `await client.request('eventName', args)`          |
+| `wsz.respond(e)({ ... })`  | `server.onRequest('eventName', handler)`           |
+| `wsz.y.eventName(result)`  | `connection.respond(event, id, timestamp, result)` |
+| `{ a: schema, s: schema }` | `{ request: schema, response: schema }`            |
 
 ### Breaking Changes
 
@@ -149,6 +157,7 @@ const events = defineEvents({
 ## Next Steps
 
 ### Recommended Improvements
+
 1. **Add more tests** - E2E integration tests with real servers
 2. **Browser example** - Add a Vite + Svelte browser example
 3. **Hono adapter** - Add Hono framework support (currently Elysia only)
@@ -157,6 +166,7 @@ const events = defineEvents({
 6. **Cookie auth helpers** - Port optional cookie utilities from old version
 
 ### Optional Features
+
 - Compression support
 - Binary file transfer
 - Stream support
@@ -177,6 +187,7 @@ bun v001/examples/01-ping-pong/client.ts  # Terminal 2
 ## Conclusion
 
 v001 is a **production-ready** rewrite that:
+
 - Maintains all core features from the old version
 - Dramatically improves developer experience
 - Adds proper testing and documentation

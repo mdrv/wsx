@@ -1,8 +1,7 @@
 import { createClient } from '../../client/index.ts'
 import { events } from './events.ts'
 
-const username =
-	process.argv[2] || `user-${Math.random().toString(36).slice(2, 7)}`
+const username = process.argv[2] || `user-${Math.random().toString(36).slice(2, 7)}`
 const room = process.argv[3] || 'general'
 
 const client = createClient('ws://localhost:3001/ws', events, {

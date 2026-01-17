@@ -243,9 +243,8 @@ export class ReconnectingWS {
 			return 0
 		}
 
-		let delay =
-			this.options.minReconnectionDelay *
-			this.options.reconnectionDelayGrowFactor ** (this.retryCount - 1)
+		let delay = this.options.minReconnectionDelay
+			* this.options.reconnectionDelayGrowFactor ** (this.retryCount - 1)
 
 		if (delay > this.options.maxReconnectionDelay) {
 			delay = this.options.maxReconnectionDelay

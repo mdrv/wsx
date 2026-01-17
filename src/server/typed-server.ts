@@ -8,12 +8,7 @@ import {
 	type SendMessage,
 	type Serializer,
 } from '../shared/index.ts'
-import type {
-	EventDefinition,
-	InferEventMap,
-	RequestHandler,
-	SendHandler,
-} from '../shared/schema.ts'
+import type { EventDefinition, InferEventMap, RequestHandler, SendHandler } from '../shared/schema.ts'
 
 /**
  * Typed WebSocket connection wrapper for server

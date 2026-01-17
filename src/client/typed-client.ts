@@ -3,8 +3,8 @@ import {
 	createTimeout,
 	defaultSerializer,
 	generateRequestId,
-	MessageType,
 	matchesRequest,
+	MessageType,
 	normalizeError,
 	PROTOCOL_VERSION,
 	type RequestMessage,
@@ -13,11 +13,7 @@ import {
 	type Serializer,
 } from '../shared/index.ts'
 import type { EventDefinition, InferEventMap } from '../shared/schema.ts'
-import {
-	ReconnectingWS,
-	type ReconnectingWSOptions,
-	type UrlProvider,
-} from './reconnecting-ws.ts'
+import { ReconnectingWS, type ReconnectingWSOptions, type UrlProvider } from './reconnecting-ws.ts'
 
 export interface TypedWSClientOptions extends ReconnectingWSOptions {
 	/** Custom serializer (defaults to CBOR) */
@@ -221,8 +217,8 @@ export class TypedWSClient<TEvents extends Record<string, EventDefinition>> {
 
 			// Handle responses
 			if (
-				message.t === MessageType.RESPONSE_OK ||
-				message.t === MessageType.RESPONSE_ERROR
+				message.t === MessageType.RESPONSE_OK
+				|| message.t === MessageType.RESPONSE_ERROR
 			) {
 				this.handleResponse(message)
 				return

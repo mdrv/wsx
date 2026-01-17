@@ -73,11 +73,9 @@ export function defineEvents<
  */
 export type InferEventMap<T extends Record<string, EventDefinition>> = {
 	[K in keyof T]: {
-		request: T[K]['request'] extends z.ZodType
-			? z.infer<T[K]['request']>
+		request: T[K]['request'] extends z.ZodType ? z.infer<T[K]['request']>
 			: never
-		response: T[K]['response'] extends z.ZodType
-			? z.infer<T[K]['response']>
+		response: T[K]['response'] extends z.ZodType ? z.infer<T[K]['response']>
 			: never
 	}
 }
@@ -85,13 +83,11 @@ export type InferEventMap<T extends Record<string, EventDefinition>> = {
 /**
  * Type for send handlers (one-way messages)
  */
-export type SendHandler<TReq> = TReq extends never
-	? () => void | Promise<void>
+export type SendHandler<TReq> = TReq extends never ? () => void | Promise<void>
 	: (payload: TReq) => void | Promise<void>
 
 /**
  * Type for request handlers (request/response)
  */
-export type RequestHandler<TReq, TRes> = TReq extends never
-	? () => TRes | Promise<TRes>
+export type RequestHandler<TReq, TRes> = TReq extends never ? () => TRes | Promise<TRes>
 	: (payload: TReq) => TRes | Promise<TRes>

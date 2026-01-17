@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import {
-	MessageType,
-	matchesRequest,
-	PROTOCOL_VERSION,
-} from '../shared/protocol.ts'
+import { matchesRequest, MessageType, PROTOCOL_VERSION } from '../shared/protocol.ts'
 
 describe('Protocol', () => {
 	it('should have correct protocol version', () => {
