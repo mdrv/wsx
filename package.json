@@ -1,0 +1,53 @@
+{
+	"name": "@mdrv/wsx",
+	"version": "255.0.0",
+	"description": "WebSocket with action/extended - Enhanced WebSocket utilities for TypeScript and Svelte",
+	"keywords": ["websocket", "svelte", "typescript", "action", "cbor"],
+	"homepage": "https://github.com/mdrv/wsx",
+	"bugs": {
+		"url": "https://github.com/mdrv/wsx/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mdrv/wsx.git"
+	},
+	"license": "GPL-3.0",
+	"author": "Umar Alfarouk <medrivia@gmail.com> (https://alfarouk.id)",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"files": ["dist"],
+	"scripts": {
+		"b": "tsdown",
+		"d": "echo 'dev mode - import from source'",
+		"s": "echo 'start not configured'",
+		"p": "echo 'preview not configured'"
+	},
+	"publishConfig": {
+		"main": "./dist/index.mjs",
+		"types": "./dist/index.d.mts",
+		"exports": {
+			".": {
+				"default": "./dist/index.mjs",
+				"types": "./dist/index.d.mts"
+			}
+		}
+	},
+	"dependencies": {
+		"@mdrv/m": "*",
+		"@mdrv/ws": "*",
+		"cbor-x": "^1.6.0",
+		"js-cookie": "^3.0.5",
+		"json-stable-stringify": "^1.1.1",
+		"loglevel": "^1.9.2",
+		"runed": "^0.15.2",
+		"svelte": "^5.0.0"
+	},
+	"devDependencies": {
+		"@types/js-cookie": "^3.0.6",
+		"@types/json-stable-stringify": "^1.0.36",
+		"tsdown": "^0.20.0-beta.3",
+		"typescript": "^5.7.3"
+	}
+}

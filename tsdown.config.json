@@ -1,0 +1,8 @@
+{
+	"entry": ["src/**/*.ts"],
+	"format": ["esm"],
+	"dts": true,
+	"clean": true,
+	"outDir": "dist",
+	"outExtension": "js"
+}
