@@ -1,0 +1,296 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 'Request/Response Guide'
+description: 'Master the request/response pattern'
+---
+
+# Request/Response Guide
+
+Master the promise-based request/response pattern for RPC-style communication over WebSocket.
+
+## Overview
+
+The request/response pattern allows you to send a message and wait for a response, similar to HTTP requests but over WebSocket:
+
+```typescript
+// Client sends request, awaits response
+const response = await client.request('getData', { id: '123' })
+console.log(response.name) // Use the response data
+```
+
+## Client-Side Requests
+
+### Basic Request
+
+```typescript
+import { createClient } from '@mdrv/wsx/v001/client'
+
+const client = createClient(url, events)
+
+client.onOpen(async () => {
+  try {
+    const result = await client.request('ping', { timestamp: Date.now() })
+    console.log(result.pong)
+  } catch (error) {
+    console.error('Request failed:', error)
+  }
+})
+```
+
+### Request with Timeout
+
+Customize timeout for individual requests:
+
+```typescript
+// Default timeout (30 seconds)
+const result1 = await client.request('getData', { id: '123' })
+
+// Custom timeout (5 seconds)
+const result2 = await client.request('getData', { id: '123' }, {
+  timeout: 5000,
+})
+```
+
+### Concurrent Requests
+
+Send multiple requests in parallel:
+
+```typescript
+const [user, posts, comments] = await Promise.all([
+  client.request('getUser', { id: '1' }),
+  client.request('getPosts', { userId: '1' }),
+  client.request('getComments', { userId: '1' }),
+])
+```
+
+### Error Handling
+
+```typescript
+try {
+  const result = await client.request('getData', { id: '123' })
+} catch (error) {
+  if (error.message === 'Request timeout') {
+    console.error('Request timed out')
+  } else if (error.cause) {
+    // Server returned an error
+    console.error('Server error:', error.message)
+    console.error('Details:', error.cause)
+  } else {
+    console.error('Unknown error:', error)
+  }
+}
+```
+
+## Server-Side Handling
+
+### Basic Handler
+
+```typescript
+import { createElysiaWS } from '@mdrv/wsx/v001/server'
+
+const { server, handler } = createElysiaWS(events)
+
+server.onRequest('getData', async (payload) => {
+  // Process request
+  const data = await database.get(payload.id)
+  
+  // Return response
+  return { name: data.name, age: data.age }
+})
+```
+
+### Async Operations
+
+Handlers can be async and perform I/O:
+
+```typescript
+server.onRequest('searchUsers', async (payload) => {
+  // Database query
+  const users = await db.query('SELECT * FROM users WHERE name LIKE ?', 
+    [`%${payload.query}%`]
+  )
+  
+  // API call
+  const enriched = await Promise.all(
+    users.map(u => fetch(`/api/enrich/${u.id}`).then(r => r.json()))
+  )
+  
+  return { users: enriched }
+})
+```
+
+### Error Responses
+
+Throw errors to send error responses:
+
+```typescript
+server.onRequest('getPost', async (payload) => {
+  const post = await database.getPost(payload.id)
+  
+  if (!post) {
+    throw new Error('Post not found', { 
+      cause: { code: 'NOT_FOUND', id: payload.id } 
+    })
+  }
+  
+  if (post.private && !payload.userId) {
+    throw new Error('Unauthorized', { 
+      cause: { code: 'UNAUTHORIZED' } 
+    })
+  }
+  
+  return post
+})
+```
+
+### Access Connection
+
+Use the connection object to send messages:
+
+```typescript
+server.onRequest('subscribe', async (payload, connection) => {
+  // Start sending updates
+  const interval = setInterval(() => {
+    connection.send('update', { 
+      data: getCurrentData() 
+    })
+  }, 1000)
+  
+  // Clean up on disconnect
+  connection.ws.subscribe('close', () => {
+    clearInterval(interval)
+  })
+  
+  return { subscribed: true }
+})
+```
+
+## Request Matching
+
+The library uses two methods to match requests with responses:
+
+### 1. ID-based Matching (Primary)
+
+Each request gets a unique ID:
+
+```typescript
+{
+  v: '1.0',
+  t: 'request',
+  x: 'getData',
+  id: 'abc123',  // Unique ID
+  w: 1234567890,
+  p: { id: '123' }
+}
+```
+
+Response includes the same ID:
+
+```typescript
+{
+  v: '1.0',
+  t: 'response_ok',
+  x: 'getData',
+  id: 'abc123',  // Same ID
+  w: 1234567890,
+  p: { name: 'Alice' }
+}
+```
+
+### 2. Timestamp Fallback
+
+If ID is missing, timestamp is used:
+
+```typescript
+{
+  v: '1.0',
+  t: 'request',
+  x: 'getData',
+  w: 1234567890,  // Timestamp used for matching
+  p: { id: '123' }
+}
+```
+
+## Best Practices
+
+### 1. Set Appropriate Timeouts
+
+```typescript
+// Quick operations
+const result = await client.request('ping', {}, { timeout: 1000 })
+
+// Database queries
+const data = await client.request('getData', { id }, { timeout: 5000 })
+
+// Long operations
+const report = await client.request('generateReport', {}, { timeout: 60000 })
+```
+
+### 2. Handle Errors Gracefully
+
+```typescript
+async function getData(id: string) {
+  try {
+    return await client.request('getData', { id })
+  } catch (error) {
+    // Log error
+    console.error('Failed to get data:', error)
+    
+    // Return fallback
+    return { name: 'Unknown', age: 0 }
+  }
+}
+```
+
+### 3. Avoid Long-Running Requests
+
+```typescript
+// ❌ Bad - blocks for too long
+server.onRequest('processAll', async () => {
+  const results = []
+  for (let i = 0; i < 10000; i++) {
+    results.push(await processItem(i))
+  }
+  return results
+})
+
+// ✅ Good - return quickly, stream updates
+server.onRequest('processAll', async (payload, connection) => {
+  // Start processing in background
+  processInBackground(connection)
+  
+  return { started: true }
+})
+
+async function processInBackground(connection) {
+  for (let i = 0; i < 10000; i++) {
+    const result = await processItem(i)
+    connection.send('progress', { item: i, result })
+  }
+  connection.send('complete', { total: 10000 })
+}
+```
+
+### 4. Validate Server-Side
+
+```typescript
+server.onRequest('createUser', async (payload) => {
+  // Even with client validation, validate on server
+  if (!payload.email || !payload.email.includes('@')) {
+    throw new Error('Invalid email')
+  }
+  
+  if (payload.age < 18) {
+    throw new Error('Must be 18 or older')
+  }
+  
+  const user = await database.createUser(payload)
+  return { id: user.id }
+})
+```
+
+## See Also
+
+- [Client API](/wsx/api/client) - `request()` method
+- [Server API](/wsx/api/server) - `onRequest()` method
+- [Event Definition Guide](/wsx/guides/events) - Defining request/response events

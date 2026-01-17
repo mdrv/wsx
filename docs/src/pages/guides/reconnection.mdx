@@ -1,0 +1,159 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 'Auto-Reconnection Guide'
+description: 'Configure robust reconnection behavior'
+---
+
+# Auto-Reconnection Guide
+
+Configure robust auto-reconnection with exponential backoff and message queuing.
+
+## Overview
+
+The client automatically reconnects when the connection is lost, with configurable retry logic:
+
+```typescript
+const client = createClient(url, events, {
+  maxRetries: Infinity,
+  minReconnectionDelay: 1000,
+  maxReconnectionDelay: 30000,
+  reconnectionDelayGrowFactor: 1.3,
+})
+```
+
+## Configuration Options
+
+### `maxRetries`
+
+Maximum number of reconnection attempts. Default: `Infinity`
+
+```typescript
+// Retry forever
+const client = createClient(url, events, { maxRetries: Infinity })
+
+// Retry 10 times then give up
+const client = createClient(url, events, { maxRetries: 10 })
+```
+
+### `minReconnectionDelay`
+
+Minimum delay before first retry (in ms). Default: `1000`
+
+```typescript
+const client = createClient(url, events, {
+  minReconnectionDelay: 2000, // Wait 2 seconds before first retry
+})
+```
+
+### `maxReconnectionDelay`
+
+Maximum delay between retries (in ms). Default: `30000`
+
+```typescript
+const client = createClient(url, events, {
+  maxReconnectionDelay: 60000, // Max 60 seconds between retries
+})
+```
+
+### `reconnectionDelayGrowFactor`
+
+Exponential backoff multiplier. Default: `1.3`
+
+```typescript
+const client = createClient(url, events, {
+  reconnectionDelayGrowFactor: 2.0, // Double delay each time
+})
+```
+
+## Exponential Backoff
+
+Delays grow exponentially between retries:
+
+```
+Retry 1: 1000ms  (minDelay)
+Retry 2: 1300ms  (1000 * 1.3)
+Retry 3: 1690ms  (1300 * 1.3)
+Retry 4: 2197ms  (1690 * 1.3)
+...
+Retry N: 30000ms (maxDelay reached)
+```
+
+## Message Queuing
+
+Messages sent while disconnected are automatically queued:
+
+```typescript
+client.send('notify', { message: 'Hello' })
+// If disconnected, this is queued
+
+// When reconnected, queued messages are sent
+```
+
+## Connection State
+
+Monitor connection state:
+
+```typescript
+client.onOpen(() => {
+  console.log('Connected!')
+})
+
+client.onClose((event) => {
+  console.log('Disconnected:', event.code, event.reason)
+})
+
+client.onError((error) => {
+  console.error('Connection error:', error)
+})
+```
+
+## Manual Control
+
+### Start Closed
+
+Don't auto-connect on creation:
+
+```typescript
+const client = createClient(url, events, {
+  startClosed: true,
+})
+
+// Manually connect later
+client.connect()
+```
+
+### Manual Close
+
+Stop auto-reconnection:
+
+```typescript
+client.close() // Won't reconnect
+```
+
+## Best Practices
+
+### Production Settings
+
+```typescript
+const client = createClient(url, events, {
+  maxRetries: Infinity,           // Retry forever
+  minReconnectionDelay: 1000,     // 1 second
+  maxReconnectionDelay: 30000,    // 30 seconds max
+  reconnectionDelayGrowFactor: 1.3,
+})
+```
+
+### Development Settings
+
+```typescript
+const client = createClient(url, events, {
+  maxRetries: 5,                  // Give up after 5 tries
+  minReconnectionDelay: 500,      // Reconnect quickly
+  maxReconnectionDelay: 5000,     // Max 5 seconds
+  debug: true,                    // Enable logging
+})
+```
+
+## See Also
+
+- [Client API](/wsx/api/client) - Reconnection options

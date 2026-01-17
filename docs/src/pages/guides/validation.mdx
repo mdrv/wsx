@@ -1,0 +1,97 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 'Validation Guide'
+description: 'Runtime validation with Zod'
+---
+
+# Validation Guide
+
+Understand how runtime Zod validation protects your WebSocket communication.
+
+## Enabling Validation
+
+Validation is enabled by default on both client and server:
+
+```typescript
+// Client
+const client = createClient(url, events, {
+  validate: true, // Default
+})
+
+// Server
+const { server, handler } = createElysiaWS(events, {
+  validate: true, // Default
+})
+```
+
+## How It Works
+
+### Client-Side
+
+**Outgoing messages** (requests/sends) are validated against the `request` schema:
+
+```typescript
+const events = defineEvents({
+  ping: {
+    request: z.object({ timestamp: z.number() }),
+    response: z.object({ pong: z.string() }),
+  },
+})
+
+// ✅ Valid - matches schema
+client.request('ping', { timestamp: Date.now() })
+
+// ❌ Validation error - timestamp is string
+client.request('ping', { timestamp: 'invalid' })
+```
+
+**Incoming responses** are validated against the `response` schema.
+
+### Server-Side
+
+**Incoming requests** are validated against the `request` schema before calling your handler.
+
+**Outgoing responses** (your return value) are validated against the `response` schema.
+
+## Error Messages
+
+Validation errors include detailed messages:
+
+```typescript
+try {
+  await client.request('createUser', { 
+    email: 'invalid-email' 
+  })
+} catch (error) {
+  console.error(error.message)
+  // "Validation error: Invalid email address"
+}
+```
+
+## Performance
+
+Validation adds minimal overhead (~0.1-1ms per message depending on schema complexity).
+
+### Disable in Production
+
+If performance is critical and you trust your code:
+
+```typescript
+const client = createClient(url, events, {
+  validate: process.env.NODE_ENV !== 'production',
+})
+```
+
+**Warning:** Only disable validation if you're confident in your type safety.
+
+## Best Practices
+
+1. Keep validation enabled during development
+2. Write tests that trigger validation errors
+3. Add custom error messages to schemas
+4. Validate on both client and server
+
+## See Also
+
+- [Event Definition Guide](/wsx/guides/events) - Define schemas
+- [Shared API](/wsx/api/shared) - `defineEvents()` reference

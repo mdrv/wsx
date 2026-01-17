@@ -1,0 +1,73 @@
+---
+layout: ../layouts/DocsLayout.astro
+title: 'Examples'
+description: 'Working examples for @mdrv/wsx'
+---
+
+# Examples
+
+Working code examples to help you get started.
+
+## Available Examples
+
+All examples are available in the [GitHub repository](https://github.com/mdrv/wsx/tree/main/src/examples).
+
+### 1. Ping-Pong
+
+Basic request/response and one-way messages.
+
+**Features:**
+- Simple request/response pattern
+- One-way client-to-server messages
+- Server-to-client pushes
+- Type-safe event handling
+
+**Location:** `src/examples/01-ping-pong/`
+
+### 2. Chat Application
+
+Multi-user chat with rooms and broadcasting.
+
+**Features:**
+- User authentication
+- Multiple chat rooms
+- Message broadcasting
+- User presence tracking
+- Connection management
+
+**Location:** `src/examples/02-chat/`
+
+### 3. Authentication
+
+Protected endpoints with authentication.
+
+**Features:**
+- Login/logout flow
+- Protected API endpoints
+- Session management
+- Error handling
+
+**Location:** `src/examples/03-auth/`
+
+## Running Examples
+
+```bash
+# Clone the repository
+git clone https://github.com/mdrv/wsx.git
+cd wsx
+
+# Install dependencies
+bun install
+
+# Run an example server (Terminal 1)
+bun src/examples/01-ping-pong/server.ts
+
+# Run the corresponding client (Terminal 2)
+bun src/examples/01-ping-pong/client.ts
+```
+
+## See Also
+
+- [Quick Start](/wsx/quick-start) - Get started quickly
+- [API Reference](/wsx/api) - Full API documentation
+- [Guides](/wsx/guides) - In-depth guides

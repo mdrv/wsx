@@ -1,0 +1,138 @@
+---
+layout: ../layouts/DocsLayout.astro
+title: 'Migration Guide'
+description: 'Migrate from older versions'
+---
+
+# Migration Guide
+
+Guide for migrating from older versions of @mdrv/ws to v001.
+
+## From v000 to v001
+
+### Breaking Changes
+
+#### 1. Event Definition Format
+
+**Old:**
+```typescript
+const events = {
+  eventName: { a: ZodType, s: ZodType }
+}
+```
+
+**New:**
+```typescript
+const events = defineEvents({
+  eventName: { request: ZodType, response: ZodType }
+})
+```
+
+#### 2. Client API
+
+**Old:**
+```typescript
+ws.x.eventName(args)  // Send
+ws.w.eventName(args)  // Request
+```
+
+**New:**
+```typescript
+client.send('eventName', args)          // Send
+await client.request('eventName', args) // Request
+```
+
+#### 3. Server API
+
+**Old:**
+```typescript
+const wsz = new WSZ(eventKeys, ws)
+wsz.respond(e)({
+  eventName: (y, n, args) => { ... }
+})
+```
+
+**New:**
+```typescript
+const { server, handler } = createElysiaWS(events)
+server.onRequest('eventName', async (payload) => {
+  return result
+})
+```
+
+### Migration Steps
+
+**1. Install new package:**
+```bash
+bun add @mdrv/wsx
+```
+
+**2. Update event definitions:**
+```typescript
+// Before
+import { z } from 'zod'
+const events = {
+  ping: { a: z.object({ msg: z.string() }), s: z.object({ ok: z.boolean() }) }
+}
+
+// After
+import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { z } from 'zod'
+const events = defineEvents({
+  ping: {
+    request: z.object({ msg: z.string() }),
+    response: z.object({ ok: z.boolean() })
+  }
+})
+```
+
+**3. Update client code:**
+```typescript
+// Before
+import { createClient } from '@mdrv/ws/v000/client'
+const client = createClient(url, eventKeys)
+client.x.notify({ message: 'hello' })
+const result = await client.w.getData({ id: '123' })
+
+// After
+import { createClient } from '@mdrv/wsx/v001/client'
+const client = createClient(url, events)
+client.send('notify', { message: 'hello' })
+const result = await client.request('getData', { id: '123' })
+```
+
+**4. Update server code:**
+```typescript
+// Before
+import { WSZ } from '@mdrv/ws/v000/server'
+const wsz = new WSZ(eventKeys, ws)
+wsz.respond(e)({
+  getData: (y, n, payload) => {
+    y({ name: 'Alice' })
+  }
+})
+
+// After
+import { createElysiaWS } from '@mdrv/wsx/v001/server'
+const { server, handler } = createElysiaWS(events)
+server.onRequest('getData', async (payload) => {
+  return { name: 'Alice' }
+})
+
+new Elysia().ws('/ws', handler).listen(3000)
+```
+
+## Benefits of v001
+
+- **Cleaner API** - Intuitive method names
+- **Better TypeScript** - Full type inference
+- **Modern patterns** - Promise-based, async/await
+- **Elysia-first** - Built for Elysia framework
+- **Better errors** - Structured error responses
+- **Documentation** - Comprehensive docs and examples
+
+## Need Help?
+
+- [GitHub Issues](https://github.com/mdrv/wsx/issues)
+- [Quick Start](/wsx/quick-start)
+- [API Reference](/wsx/api)

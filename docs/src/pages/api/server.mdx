@@ -1,0 +1,320 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 'Server API'
+description: 'Complete API reference for @mdrv/wsx server'
+---
+
+# Server API
+
+Complete API reference for the WebSocket server.
+
+## createElysiaWS()
+
+Create an Elysia WebSocket handler with type-safe event handling.
+
+```typescript
+import { createElysiaWS } from '@mdrv/wsx/v001/server'
+
+const { server, handler } = createElysiaWS(events, options?)
+```
+
+### Parameters
+
+#### `events: EventDefinitions`
+
+Event schema defined with `defineEvents()`. See [Event Definition Guide](/wsx/guides/events).
+
+```typescript
+import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { z } from 'zod'
+
+const events = defineEvents({
+  ping: {
+    request: z.object({ timestamp: z.number() }),
+    response: z.object({ pong: z.string() }),
+  },
+})
+```
+
+#### `options?: ServerOptions`
+
+Optional configuration object:
+
+```typescript
+interface ServerOptions {
+  validate?: boolean      // Enable Zod validation (default: true)
+  debug?: boolean        // Enable debug logging (default: false)
+  serializer?: Serializer // Custom serializer (default: CBOR)
+}
+```
+
+### Returns
+
+Returns an object with two properties:
+
+```typescript
+{
+  server: TypedServer,  // Event handler registration
+  handler: ElysiaWSHandler  // Elysia WebSocket handler
+}
+```
+
+## Event Handler Registration
+
+### `server.onRequest(event, handler)`
+
+Handle request/response events.
+
+```typescript
+server.onRequest('getData', async (payload, connection) => {
+  // Process request
+  const data = await fetchData(payload.id)
+  
+  // Return response
+  return { name: data.name, age: data.age }
+})
+```
+
+**Parameters:**
+- `event: string` - Event name (must have `response` in schema)
+- `handler: (payload: T, connection: Connection) => Promise<R> | R` - Request handler
+
+**Handler Parameters:**
+- `payload: T` - Request payload (validated if validation enabled)
+- `connection: Connection` - Connection object (see below)
+
+**Handler Returns:** Response data matching the event's `response` schema
+
+**Type Safety:**
+```typescript
+const events = defineEvents({
+  getData: {
+    request: z.object({ id: z.string() }),
+    response: z.object({ name: z.string(), age: z.number() }),
+  },
+})
+
+// ✅ TypeScript knows payload and response types
+server.onRequest('getData', async (payload) => {
+  console.log(payload.id) // payload.id is string
+  return { name: 'Alice', age: 30 } // Must match response schema
+})
+
+// ❌ TypeScript error: wrong return type
+server.onRequest('getData', async (payload) => {
+  return { wrong: 'field' }
+})
+```
+
+**Error Handling:**
+```typescript
+server.onRequest('getData', async (payload) => {
+  if (!payload.id) {
+    throw new Error('Invalid ID', { cause: { code: 'INVALID_ID' } })
+  }
+  
+  const data = await fetchData(payload.id)
+  if (!data) {
+    throw new Error('Not found', { cause: { code: 'NOT_FOUND' } })
+  }
+  
+  return data
+})
+```
+
+Errors are automatically sent to the client as error responses.
+
+### `server.onSend(event, handler)`
+
+Handle one-way messages (no response expected).
+
+```typescript
+server.onSend('notify', async (payload, connection) => {
+  console.log('Notification:', payload.message)
+  // No return value
+})
+```
+
+**Parameters:**
+- `event: string` - Event name (must NOT have `response` in schema)
+- `handler: (payload: T, connection: Connection) => Promise<void> | void` - Message handler
+
+## Connection Object
+
+The `connection` object is passed to all event handlers:
+
+```typescript
+interface Connection {
+  ws: ElysiaWebSocket        // Raw Elysia WebSocket
+  send(event, payload): void // Send one-way message to client
+  respond(event, id, timestamp, result): void // Send response (internal use)
+  error(event, id, timestamp, error): void    // Send error (internal use)
+}
+```
+
+### `connection.send(event, payload)`
+
+Send a one-way message to the client.
+
+```typescript
+server.onRequest('subscribe', async (payload, connection) => {
+  // Subscribe to updates
+  const interval = setInterval(() => {
+    connection.send('update', { 
+      timestamp: Date.now() 
+    })
+  }, 1000)
+  
+  return { subscribed: true }
+})
+```
+
+### `connection.ws`
+
+Access the raw Elysia WebSocket for advanced use cases.
+
+```typescript
+server.onSend('notify', async (payload, connection) => {
+  // Access raw WebSocket
+  console.log('Client IP:', connection.ws.remoteAddress)
+})
+```
+
+## Elysia Integration
+
+The `handler` object contains Elysia WebSocket lifecycle methods:
+
+```typescript
+const { server, handler } = createElysiaWS(events)
+
+new Elysia()
+  .ws('/ws', handler)
+  .listen(3000)
+```
+
+The `handler` object has these properties:
+
+```typescript
+interface ElysiaWSHandler {
+  open: (ws: ElysiaWebSocket) => void
+  message: (ws: ElysiaWebSocket, message: ArrayBuffer | string) => void
+  close: (ws: ElysiaWebSocket) => void
+}
+```
+
+These are automatically called by Elysia - you don't need to call them directly.
+
+## Broadcasting
+
+To broadcast messages to multiple clients, maintain a list of connections:
+
+```typescript
+const connections = new Set<Connection>()
+
+const { server, handler } = createElysiaWS(events)
+
+// Store connections when clients connect
+const originalOpen = handler.open
+handler.open = (ws) => {
+  originalOpen(ws)
+  // Access connection from ws metadata if needed
+}
+
+server.onRequest('join', async (payload, connection) => {
+  connections.add(connection)
+  return { joined: true }
+})
+
+server.onRequest('broadcast', async (payload, connection) => {
+  // Send to all connected clients
+  for (const conn of connections) {
+    conn.send('message', { text: payload.message })
+  }
+  return { sent: connections.size }
+})
+```
+
+## Complete Example
+
+```typescript
+import { createElysiaWS } from '@mdrv/wsx/v001/server'
+import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { Elysia } from 'elysia'
+import { z } from 'zod'
+
+// Define events
+const events = defineEvents({
+  // Request/response
+  ping: {
+    request: z.object({ timestamp: z.number() }),
+    response: z.object({ pong: z.string() }),
+  },
+  getData: {
+    request: z.object({ id: z.string() }),
+    response: z.object({ name: z.string(), age: z.number() }),
+  },
+  
+  // One-way messages
+  notify: {
+    request: z.object({ message: z.string() }),
+  },
+  
+  // Server -> Client
+  serverMessage: {
+    request: z.object({ text: z.string() }),
+  },
+})
+
+// Create server
+const { server, handler } = createElysiaWS(events, {
+  validate: true,
+  debug: true,
+})
+
+// Handle requests
+server.onRequest('ping', async (payload) => {
+  console.log('Ping at:', payload.timestamp)
+  return { pong: 'Hello from server!' }
+})
+
+server.onRequest('getData', async (payload, connection) => {
+  // Validate and fetch data
+  if (!payload.id) {
+    throw new Error('ID required')
+  }
+  
+  const data = await database.get(payload.id)
+  
+  if (!data) {
+    throw new Error('Not found', { 
+      cause: { code: 'NOT_FOUND' } 
+    })
+  }
+  
+  return { name: data.name, age: data.age }
+})
+
+// Handle one-way messages
+server.onSend('notify', async (payload, connection) => {
+  console.log('Client notification:', payload.message)
+  
+  // Send message back to client
+  connection.send('serverMessage', { 
+    text: `Received: ${payload.message}` 
+  })
+})
+
+// Attach to Elysia
+new Elysia()
+  .ws('/ws', handler)
+  .listen(3000)
+
+console.log('WebSocket server running on ws://localhost:3000/ws')
+```
+
+## See Also
+
+- [Client API](/wsx/api/client)
+- [Event Definition Guide](/wsx/guides/events)
+- [Request/Response Guide](/wsx/guides/request-response)
+- [Validation Guide](/wsx/guides/validation)

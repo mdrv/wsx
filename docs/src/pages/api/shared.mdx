@@ -1,0 +1,340 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 'Shared API'
+description: 'Shared types and utilities for @mdrv/wsx'
+---
+
+# Shared API
+
+Shared types, utilities, and protocol definitions used by both client and server.
+
+## defineEvents()
+
+Define a type-safe event schema for your WebSocket communication.
+
+```typescript
+import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { z } from 'zod'
+
+const events = defineEvents({
+  eventName: {
+    request: z.object({ ... }),
+    response: z.object({ ... }), // Optional for one-way messages
+  },
+})
+```
+
+### Parameters
+
+An object where each key is an event name, and each value defines the event schema:
+
+```typescript
+{
+  [eventName: string]: {
+    request: ZodType      // Request payload schema (required)
+    response?: ZodType    // Response payload schema (optional)
+  }
+}
+```
+
+### Event Types
+
+**Request/Response Events** - Client sends request, server responds:
+
+```typescript
+const events = defineEvents({
+  getData: {
+    request: z.object({ id: z.string() }),
+    response: z.object({ name: z.string(), age: z.number() }),
+  },
+})
+```
+
+**One-Way Messages** - No response expected:
+
+```typescript
+const events = defineEvents({
+  notify: {
+    request: z.object({ message: z.string() }),
+    // No response field = one-way message
+  },
+})
+```
+
+**Server-to-Client Messages** - Server pushes to client:
+
+```typescript
+const events = defineEvents({
+  serverUpdate: {
+    request: z.object({ data: z.any() }),
+    // Client listens with client.on('serverUpdate', ...)
+  },
+})
+```
+
+### Type Inference
+
+`defineEvents()` automatically infers TypeScript types from Zod schemas:
+
+```typescript
+const events = defineEvents({
+  ping: {
+    request: z.object({ timestamp: z.number() }),
+    response: z.object({ pong: z.string() }),
+  },
+})
+
+// TypeScript knows the types:
+// events.ping.request => { timestamp: number }
+// events.ping.response => { pong: string }
+```
+
+### Complex Schemas
+
+Use any Zod schema features:
+
+```typescript
+const events = defineEvents({
+  createUser: {
+    request: z.object({
+      name: z.string().min(1).max(100),
+      email: z.string().email(),
+      age: z.number().int().positive().optional(),
+      role: z.enum(['admin', 'user', 'guest']),
+      metadata: z.record(z.string()).optional(),
+    }),
+    response: z.object({
+      id: z.string().uuid(),
+      createdAt: z.number(),
+    }),
+  },
+})
+```
+
+### Shared Types
+
+Extract types from event definitions:
+
+```typescript
+import type { InferEventPayload, InferEventResponse } from '@mdrv/wsx/v001/shared'
+
+const events = defineEvents({
+  getData: {
+    request: z.object({ id: z.string() }),
+    response: z.object({ name: z.string() }),
+  },
+})
+
+// Extract types
+type GetDataRequest = InferEventPayload<typeof events, 'getData'>
+// => { id: string }
+
+type GetDataResponse = InferEventResponse<typeof events, 'getData'>
+// => { name: string }
+```
+
+## Protocol Types
+
+The library uses a versioned binary protocol for communication.
+
+### Message Types
+
+```typescript
+type MessageType = 
+  | 'send'           // One-way message
+  | 'request'        // Request (expects response)
+  | 'response_ok'    // Successful response
+  | 'response_error' // Error response
+```
+
+### Message Structure
+
+**Send Message:**
+```typescript
+{
+  v: '1.0',          // Protocol version
+  t: 'send',         // Message type
+  x: 'eventName',    // Event name
+  p?: { ... }        // Payload (optional)
+}
+```
+
+**Request Message:**
+```typescript
+{
+  v: '1.0',
+  t: 'request',
+  x: 'eventName',
+  id?: 'unique-id',  // Request ID (optional)
+  w: 1234567890,     // Timestamp (fallback for matching)
+  p?: { ... }
+}
+```
+
+**Response (Success):**
+```typescript
+{
+  v: '1.0',
+  t: 'response_ok',
+  x: 'eventName',
+  id?: 'unique-id',
+  w: 1234567890,
+  p?: { ... }
+}
+```
+
+**Response (Error):**
+```typescript
+{
+  v: '1.0',
+  t: 'response_error',
+  x: 'eventName',
+  id?: 'unique-id',
+  w: 1234567890,
+  e: {
+    message: 'Error message',
+    cause?: { ... }
+  }
+}
+```
+
+## Serializers
+
+The library supports multiple serialization formats.
+
+### CBOR Serializer (Default)
+
+Fast binary encoding using [cbor-x](https://github.com/kriszyp/cbor-x):
+
+```typescript
+import { cborSerializer } from '@mdrv/wsx/v001/shared'
+
+const client = createClient(url, events, {
+  serializer: cborSerializer,
+})
+```
+
+**Benefits:**
+- Faster than JSON
+- Smaller payload size
+- Supports binary data
+- Type preservation (Dates, typed arrays, etc.)
+
+### JSON Serializer
+
+Standard JSON encoding:
+
+```typescript
+import { jsonSerializer } from '@mdrv/wsx/v001/shared'
+
+const client = createClient(url, events, {
+  serializer: jsonSerializer,
+})
+```
+
+**Use when:**
+- You need human-readable messages
+- Debugging WebSocket traffic
+- Integration with non-binary systems
+
+### Custom Serializer
+
+Implement your own serializer:
+
+```typescript
+import type { Serializer } from '@mdrv/wsx/v001/shared'
+
+const mySerializer: Serializer = {
+  encode: (data: any) => {
+    // Return ArrayBuffer or string
+    return new TextEncoder().encode(JSON.stringify(data))
+  },
+  
+  decode: (data: ArrayBuffer | string) => {
+    // Parse data back to object
+    if (typeof data === 'string') {
+      return JSON.parse(data)
+    }
+    return JSON.parse(new TextDecoder().decode(data))
+  },
+}
+
+const client = createClient(url, events, {
+  serializer: mySerializer,
+})
+```
+
+## Utility Functions
+
+### `generateId()`
+
+Generate a unique request ID:
+
+```typescript
+import { generateId } from '@mdrv/wsx/v001/shared'
+
+const id = generateId() // => "1234567890-abcd"
+```
+
+Used internally for request/response matching.
+
+### Type Guards
+
+Check message types at runtime:
+
+```typescript
+import { 
+  isSendMessage, 
+  isRequestMessage,
+  isResponseOk,
+  isResponseError 
+} from '@mdrv/wsx/v001/shared'
+
+if (isRequestMessage(msg)) {
+  // msg is RequestMessage
+  console.log(msg.id, msg.x, msg.p)
+}
+```
+
+## TypeScript Types
+
+### EventDefinitions
+
+```typescript
+type EventDefinitions = Record<string, {
+  request: ZodType
+  response?: ZodType
+}>
+```
+
+### Connection
+
+```typescript
+interface Connection {
+  ws: ElysiaWebSocket
+  send(event: string, payload?: any): void
+  respond(event: string, id: string | undefined, timestamp: number, result: any): void
+  error(event: string, id: string | undefined, timestamp: number, error: Error): void
+}
+```
+
+### Serializer
+
+```typescript
+interface Serializer {
+  encode: (data: any) => ArrayBuffer | string
+  decode: (data: ArrayBuffer | string) => any
+}
+```
+
+## Protocol Version
+
+Current protocol version: **1.0**
+
+The protocol version is included in every message to ensure compatibility. Future versions will maintain backward compatibility when possible.
+
+## See Also
+
+- [Event Definition Guide](/wsx/guides/events)
+- [Client API](/wsx/api/client)
+- [Server API](/wsx/api/server)

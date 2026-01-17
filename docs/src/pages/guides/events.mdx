@@ -1,0 +1,352 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 'Event Definition Guide'
+description: 'Learn how to define type-safe events'
+---
+
+# Event Definition Guide
+
+Learn how to define type-safe event schemas for your WebSocket communication.
+
+## Basic Event Definition
+
+Events are defined using `defineEvents()` with Zod schemas:
+
+```typescript
+import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { z } from 'zod'
+
+const events = defineEvents({
+  // Event name
+  ping: {
+    request: z.object({ timestamp: z.number() }),  // Request schema
+    response: z.object({ pong: z.string() }),      // Response schema
+  },
+})
+```
+
+## Event Types
+
+### 1. Request/Response Events
+
+Events that expect a response from the server:
+
+```typescript
+const events = defineEvents({
+  getData: {
+    request: z.object({ id: z.string() }),
+    response: z.object({ 
+      name: z.string(), 
+      age: z.number() 
+    }),
+  },
+})
+
+// Client usage
+const data = await client.request('getData', { id: '123' })
+console.log(data.name, data.age) // TypeScript knows the types!
+
+// Server usage
+server.onRequest('getData', async (payload) => {
+  return { name: 'Alice', age: 30 } // Must match response schema
+})
+```
+
+### 2. One-Way Messages (Client → Server)
+
+Events without a response - fire and forget:
+
+```typescript
+const events = defineEvents({
+  notify: {
+    request: z.object({ message: z.string() }),
+    // No response field
+  },
+})
+
+// Client usage
+client.send('notify', { message: 'Hello!' })
+
+// Server usage
+server.onSend('notify', async (payload) => {
+  console.log(payload.message)
+  // No return value
+})
+```
+
+### 3. Server Push Events (Server → Client)
+
+Events initiated by the server:
+
+```typescript
+const events = defineEvents({
+  serverUpdate: {
+    request: z.object({ data: z.any() }),
+  },
+})
+
+// Server pushes to client
+server.onRequest('subscribe', async (payload, connection) => {
+  setInterval(() => {
+    connection.send('serverUpdate', { 
+      data: { timestamp: Date.now() } 
+    })
+  }, 1000)
+  
+  return { subscribed: true }
+})
+
+// Client listens
+client.on('serverUpdate', (payload) => {
+  console.log('Update:', payload.data)
+})
+```
+
+## Schema Patterns
+
+### Optional Fields
+
+```typescript
+const events = defineEvents({
+  updateUser: {
+    request: z.object({
+      id: z.string(),
+      name: z.string().optional(),
+      age: z.number().optional(),
+    }),
+    response: z.object({ updated: z.boolean() }),
+  },
+})
+```
+
+### Nested Objects
+
+```typescript
+const events = defineEvents({
+  createPost: {
+    request: z.object({
+      title: z.string(),
+      content: z.string(),
+      author: z.object({
+        id: z.string(),
+        name: z.string(),
+      }),
+      tags: z.array(z.string()),
+    }),
+    response: z.object({
+      postId: z.string(),
+    }),
+  },
+})
+```
+
+### Enums and Literals
+
+```typescript
+const events = defineEvents({
+  setStatus: {
+    request: z.object({
+      status: z.enum(['online', 'offline', 'away']),
+      visibility: z.literal('public').or(z.literal('private')),
+    }),
+    response: z.object({ success: z.boolean() }),
+  },
+})
+```
+
+### Unions and Discriminated Unions
+
+```typescript
+const events = defineEvents({
+  processData: {
+    request: z.discriminatedUnion('type', [
+      z.object({ type: z.literal('text'), content: z.string() }),
+      z.object({ type: z.literal('number'), value: z.number() }),
+      z.object({ type: z.literal('image'), url: z.string().url() }),
+    ]),
+    response: z.object({ processed: z.boolean() }),
+  },
+})
+```
+
+### Validation Rules
+
+```typescript
+const events = defineEvents({
+  createUser: {
+    request: z.object({
+      username: z.string()
+        .min(3, 'Username must be at least 3 characters')
+        .max(20, 'Username must be at most 20 characters')
+        .regex(/^[a-zA-Z0-9_]+$/, 'Only alphanumeric and underscore allowed'),
+      email: z.string().email('Invalid email address'),
+      age: z.number().int().positive().max(150),
+      password: z.string().min(8),
+    }),
+    response: z.object({
+      userId: z.string().uuid(),
+    }),
+  },
+})
+```
+
+## Type Extraction
+
+Extract TypeScript types from your event definitions:
+
+```typescript
+import type { InferEventPayload, InferEventResponse } from '@mdrv/wsx/v001/shared'
+
+const events = defineEvents({
+  getData: {
+    request: z.object({ id: z.string() }),
+    response: z.object({ name: z.string(), age: z.number() }),
+  },
+})
+
+// Extract request type
+type GetDataRequest = InferEventPayload<typeof events, 'getData'>
+// => { id: string }
+
+// Extract response type
+type GetDataResponse = InferEventResponse<typeof events, 'getData'>
+// => { name: string, age: number }
+
+// Use in functions
+function processData(data: GetDataRequest): GetDataResponse {
+  return { name: 'Alice', age: 30 }
+}
+```
+
+## Sharing Event Definitions
+
+Create a shared file that both client and server import:
+
+```typescript
+// shared/events.ts
+import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { z } from 'zod'
+
+export const events = defineEvents({
+  ping: {
+    request: z.object({ timestamp: z.number() }),
+    response: z.object({ pong: z.string() }),
+  },
+  notify: {
+    request: z.object({ message: z.string() }),
+  },
+})
+```
+
+```typescript
+// server.ts
+import { events } from './shared/events'
+const { server, handler } = createElysiaWS(events)
+```
+
+```typescript
+// client.ts
+import { events } from './shared/events'
+const client = createClient(url, events)
+```
+
+## Best Practices
+
+### 1. Use Descriptive Event Names
+
+```typescript
+// ✅ Good
+const events = defineEvents({
+  getUserProfile: { ... },
+  updateUserSettings: { ... },
+  deletePost: { ... },
+})
+
+// ❌ Bad
+const events = defineEvents({
+  get: { ... },
+  update: { ... },
+  delete: { ... },
+})
+```
+
+### 2. Keep Schemas Simple
+
+```typescript
+// ✅ Good - simple, focused
+const events = defineEvents({
+  createUser: {
+    request: z.object({
+      name: z.string(),
+      email: z.string().email(),
+    }),
+    response: z.object({ id: z.string() }),
+  },
+})
+
+// ❌ Avoid - too complex
+const events = defineEvents({
+  createUser: {
+    request: z.object({
+      data: z.object({
+        personal: z.object({
+          names: z.object({
+            first: z.string(),
+            middle: z.string().optional(),
+            last: z.string(),
+          }),
+        }),
+      }),
+    }),
+  },
+})
+```
+
+### 3. Add Validation Messages
+
+```typescript
+const events = defineEvents({
+  login: {
+    request: z.object({
+      email: z.string()
+        .email('Please provide a valid email'),
+      password: z.string()
+        .min(8, 'Password must be at least 8 characters'),
+    }),
+    response: z.object({
+      token: z.string(),
+    }),
+  },
+})
+```
+
+### 4. Version Your Events
+
+When making breaking changes, create new event names:
+
+```typescript
+const events = defineEvents({
+  // Old version (deprecated but keep for compatibility)
+  getUserV1: {
+    request: z.object({ id: z.string() }),
+    response: z.object({ name: z.string() }),
+  },
+  
+  // New version with more fields
+  getUserV2: {
+    request: z.object({ id: z.string() }),
+    response: z.object({ 
+      name: z.string(), 
+      email: z.string(),
+      age: z.number(),
+    }),
+  },
+})
+```
+
+## See Also
+
+- [Shared API Reference](/wsx/api/shared) - `defineEvents()` API
+- [Validation Guide](/wsx/guides/validation) - Runtime validation
+- [Client API](/wsx/api/client) - Using events with client
+- [Server API](/wsx/api/server) - Handling events on server

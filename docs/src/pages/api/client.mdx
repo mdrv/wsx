@@ -1,0 +1,323 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 'Client API'
+description: 'Complete API reference for @mdrv/wsx client'
+---
+
+# Client API
+
+Complete API reference for the WebSocket client.
+
+## createClient()
+
+Create a typed WebSocket client instance.
+
+```typescript
+import { createClient } from '@mdrv/wsx/v001/client'
+
+const client = createClient(url, events, options?)
+```
+
+### Parameters
+
+#### `url: string`
+
+WebSocket server URL.
+
+```typescript
+const client = createClient('ws://localhost:3000/ws', events)
+```
+
+#### `events: EventDefinitions`
+
+Event schema defined with `defineEvents()`. See [Event Definition Guide](/wsx/guides/events).
+
+```typescript
+import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { z } from 'zod'
+
+const events = defineEvents({
+  ping: {
+    request: z.object({ timestamp: z.number() }),
+    response: z.object({ pong: z.string() }),
+  },
+})
+```
+
+#### `options?: ClientOptions`
+
+Optional configuration object:
+
+```typescript
+interface ClientOptions {
+  // Validation
+  validate?: boolean                    // Enable Zod validation (default: true)
+  serializer?: Serializer              // Custom serializer (default: CBOR)
+  
+  // Request settings
+  requestTimeout?: number              // Default timeout in ms (default: 30000)
+  debug?: boolean                      // Enable debug logging (default: false)
+  
+  // Reconnection settings
+  maxReconnectionDelay?: number        // Max delay between retries (default: 30000)
+  minReconnectionDelay?: number        // Min delay between retries (default: 1000)
+  reconnectionDelayGrowFactor?: number // Delay growth factor (default: 1.3)
+  maxRetries?: number                  // Max retry attempts (default: Infinity)
+  startClosed?: boolean                // Don't auto-connect (default: false)
+}
+```
+
+### Returns
+
+Returns a `TypedClient` instance with the following methods and properties.
+
+## Connection Methods
+
+### `connect()`
+
+Open the WebSocket connection.
+
+```typescript
+client.connect()
+```
+
+If `startClosed: true` was set in options, you must call this manually. Otherwise, connection starts automatically.
+
+### `close(code?, reason?)`
+
+Close the WebSocket connection.
+
+```typescript
+client.close()
+client.close(1000, 'Normal closure')
+```
+
+**Parameters:**
+- `code?: number` - WebSocket close code (default: 1000)
+- `reason?: string` - Close reason
+
+## Messaging Methods
+
+### `send(event, payload?)`
+
+Send a one-way message to the server (no response expected).
+
+```typescript
+client.send('notify', { message: 'Hello!' })
+```
+
+**Parameters:**
+- `event: string` - Event name (must be defined in events schema)
+- `payload?: T` - Event payload (validated against schema if validation enabled)
+
+**Type Safety:**
+```typescript
+// ✅ TypeScript knows the payload type
+client.send('notify', { message: 'Hello' })
+
+// ❌ TypeScript error: wrong payload type
+client.send('notify', { wrong: 'field' })
+```
+
+### `request(event, payload?, options?)`
+
+Send a request and wait for a response.
+
+```typescript
+const response = await client.request('getData', { id: '123' })
+```
+
+**Parameters:**
+- `event: string` - Event name
+- `payload?: T` - Request payload
+- `options?: RequestOptions` - Optional request settings
+
+```typescript
+interface RequestOptions {
+  timeout?: number  // Request timeout in ms (overrides default)
+}
+```
+
+**Returns:** `Promise<ResponseType>`
+
+**Type Safety:**
+```typescript
+const events = defineEvents({
+  getData: {
+    request: z.object({ id: z.string() }),
+    response: z.object({ name: z.string(), age: z.number() }),
+  },
+})
+
+// ✅ TypeScript knows response.name is string, response.age is number
+const response = await client.request('getData', { id: '123' })
+console.log(response.name, response.age)
+```
+
+**Error Handling:**
+```typescript
+try {
+  const response = await client.request('getData', { id: '123' })
+} catch (error) {
+  if (error.message === 'Request timeout') {
+    // Timeout occurred
+  } else if (error.cause) {
+    // Server responded with error
+    console.error('Server error:', error.message, error.cause)
+  }
+}
+```
+
+## Event Listeners
+
+### `on(event, handler)`
+
+Listen for messages from the server.
+
+```typescript
+client.on('notification', (payload) => {
+  console.log('Received:', payload.message)
+})
+```
+
+**Parameters:**
+- `event: string` - Event name
+- `handler: (payload: T) => void` - Handler function
+
+**Type Safety:**
+```typescript
+// ✅ TypeScript knows payload type
+client.on('notification', (payload) => {
+  console.log(payload.message) // payload is typed!
+})
+```
+
+### `off(event, handler)`
+
+Remove an event listener.
+
+```typescript
+const handler = (payload) => console.log(payload)
+
+client.on('notification', handler)
+client.off('notification', handler)
+```
+
+### `onOpen(handler)`
+
+Called when connection is established.
+
+```typescript
+client.onOpen(() => {
+  console.log('Connected!')
+})
+```
+
+### `onClose(handler)`
+
+Called when connection is closed.
+
+```typescript
+client.onClose((event) => {
+  console.log('Disconnected:', event.code, event.reason)
+})
+```
+
+**Handler receives:** `CloseEvent`
+
+### `onError(handler)`
+
+Called on connection error.
+
+```typescript
+client.onError((error) => {
+  console.error('Connection error:', error)
+})
+```
+
+## Properties
+
+### `readyState`
+
+Current connection state.
+
+```typescript
+const state = client.readyState
+// 0 = CONNECTING
+// 1 = OPEN
+// 2 = CLOSING
+// 3 = CLOSED
+```
+
+## Complete Example
+
+```typescript
+import { createClient } from '@mdrv/wsx/v001/client'
+import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { z } from 'zod'
+
+// Define events
+const events = defineEvents({
+  ping: {
+    request: z.object({ timestamp: z.number() }),
+    response: z.object({ pong: z.string() }),
+  },
+  notify: {
+    request: z.object({ message: z.string() }),
+  },
+  serverMessage: {
+    request: z.object({ text: z.string() }),
+  },
+})
+
+// Create client
+const client = createClient('ws://localhost:3000/ws', events, {
+  validate: true,
+  debug: true,
+  requestTimeout: 5000,
+  maxRetries: 10,
+  minReconnectionDelay: 1000,
+  maxReconnectionDelay: 30000,
+})
+
+// Connection events
+client.onOpen(async () => {
+  console.log('Connected!')
+  
+  // Send request/response
+  try {
+    const result = await client.request('ping', { 
+      timestamp: Date.now() 
+    })
+    console.log('Response:', result.pong)
+  } catch (error) {
+    console.error('Request failed:', error)
+  }
+  
+  // Send one-way message
+  client.send('notify', { message: 'Hello from client!' })
+})
+
+client.onClose((event) => {
+  console.log('Disconnected:', event.code, event.reason)
+})
+
+client.onError((error) => {
+  console.error('Error:', error)
+})
+
+// Listen for server messages
+client.on('serverMessage', (payload) => {
+  console.log('Server says:', payload.text)
+})
+
+// Start connection
+client.connect()
+```
+
+## See Also
+
+- [Request/Response Guide](/wsx/guides/request-response)
+- [Auto-Reconnection Guide](/wsx/guides/reconnection)
+- [Validation Guide](/wsx/guides/validation)
+- [Server API](/wsx/api/server)
