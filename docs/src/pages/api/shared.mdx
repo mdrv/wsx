@@ -13,7 +13,7 @@ Shared types, utilities, and protocol definitions used by both client and server
 Define a type-safe event schema for your WebSocket communication.
 
 ```typescript
-import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { defineEvents } from '@mdrv/wsx/shared'
 import { z } from 'zod'
 
 const events = defineEvents({
@@ -116,7 +116,7 @@ const events = defineEvents({
 Extract types from event definitions:
 
 ```typescript
-import type { InferEventPayload, InferEventResponse } from '@mdrv/wsx/v001/shared'
+import type { InferEventPayload, InferEventResponse } from '@mdrv/wsx/shared'
 
 const events = defineEvents({
   getData: {
@@ -207,7 +207,7 @@ The library supports multiple serialization formats.
 Fast binary encoding using [cbor-x](https://github.com/kriszyp/cbor-x):
 
 ```typescript
-import { cborSerializer } from '@mdrv/wsx/v001/shared'
+import { cborSerializer } from '@mdrv/wsx/shared'
 
 const client = createClient(url, events, {
   serializer: cborSerializer,
@@ -225,7 +225,7 @@ const client = createClient(url, events, {
 Standard JSON encoding:
 
 ```typescript
-import { jsonSerializer } from '@mdrv/wsx/v001/shared'
+import { jsonSerializer } from '@mdrv/wsx/shared'
 
 const client = createClient(url, events, {
   serializer: jsonSerializer,
@@ -242,7 +242,7 @@ const client = createClient(url, events, {
 Implement your own serializer:
 
 ```typescript
-import type { Serializer } from '@mdrv/wsx/v001/shared'
+import type { Serializer } from '@mdrv/wsx/shared'
 
 const mySerializer: Serializer = {
   encode: (data: any) => {
@@ -271,7 +271,7 @@ const client = createClient(url, events, {
 Generate a unique request ID:
 
 ```typescript
-import { generateId } from '@mdrv/wsx/v001/shared'
+import { generateId } from '@mdrv/wsx/shared'
 
 const id = generateId() // => "1234567890-abcd"
 ```
@@ -288,7 +288,7 @@ import {
   isRequestMessage,
   isResponseOk,
   isResponseError 
-} from '@mdrv/wsx/v001/shared'
+} from '@mdrv/wsx/shared'
 
 if (isRequestMessage(msg)) {
   // msg is RequestMessage

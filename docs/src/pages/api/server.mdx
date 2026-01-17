@@ -13,7 +13,7 @@ Complete API reference for the WebSocket server.
 Create an Elysia WebSocket handler with type-safe event handling.
 
 ```typescript
-import { createElysiaWS } from '@mdrv/wsx/v001/server'
+import { createElysiaWS } from '@mdrv/wsx/server'
 
 const { server, handler } = createElysiaWS(events, options?)
 ```
@@ -25,7 +25,7 @@ const { server, handler } = createElysiaWS(events, options?)
 Event schema defined with `defineEvents()`. See [Event Definition Guide](/wsx/guides/events).
 
 ```typescript
-import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { defineEvents } from '@mdrv/wsx/shared'
 import { z } from 'zod'
 
 const events = defineEvents({
@@ -237,8 +237,8 @@ server.onRequest('broadcast', async (payload, connection) => {
 ## Complete Example
 
 ```typescript
-import { createElysiaWS } from '@mdrv/wsx/v001/server'
-import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { createElysiaWS } from '@mdrv/wsx/server'
+import { defineEvents } from '@mdrv/wsx/shared'
 import { Elysia } from 'elysia'
 import { z } from 'zod'
 

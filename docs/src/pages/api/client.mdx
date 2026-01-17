@@ -13,7 +13,7 @@ Complete API reference for the WebSocket client.
 Create a typed WebSocket client instance.
 
 ```typescript
-import { createClient } from '@mdrv/wsx/v001/client'
+import { createClient } from '@mdrv/wsx/client'
 
 const client = createClient(url, events, options?)
 ```
@@ -33,7 +33,7 @@ const client = createClient('ws://localhost:3000/ws', events)
 Event schema defined with `defineEvents()`. See [Event Definition Guide](/wsx/guides/events).
 
 ```typescript
-import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { defineEvents } from '@mdrv/wsx/shared'
 import { z } from 'zod'
 
 const events = defineEvents({
@@ -252,8 +252,8 @@ const state = client.readyState
 ## Complete Example
 
 ```typescript
-import { createClient } from '@mdrv/wsx/v001/client'
-import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { createClient } from '@mdrv/wsx/client'
+import { defineEvents } from '@mdrv/wsx/shared'
 import { z } from 'zod'
 
 // Define events

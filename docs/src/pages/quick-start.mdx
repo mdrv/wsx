@@ -20,7 +20,7 @@ Create a shared event schema that both client and server will use:
 
 ```typescript
 // events.ts
-import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { defineEvents } from '@mdrv/wsx/shared'
 import { z } from 'zod'
 
 export const events = defineEvents({
@@ -43,7 +43,7 @@ The `defineEvents` function creates a type-safe event schema where:
 
 ```typescript
 // server.ts
-import { createElysiaWS } from '@mdrv/wsx/v001/server'
+import { createElysiaWS } from '@mdrv/wsx/server'
 import { Elysia } from 'elysia'
 import { events } from './events'
 
@@ -75,7 +75,7 @@ console.log('WebSocket server running on http://localhost:3000/ws')
 
 ```typescript
 // client.ts
-import { createClient } from '@mdrv/wsx/v001/client'
+import { createClient } from '@mdrv/wsx/client'
 import { events } from './events'
 
 const client = createClient('ws://localhost:3000/ws', events, {

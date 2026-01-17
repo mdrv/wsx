@@ -23,7 +23,7 @@ console.log(response.name) // Use the response data
 ### Basic Request
 
 ```typescript
-import { createClient } from '@mdrv/wsx/v001/client'
+import { createClient } from '@mdrv/wsx/client'
 
 const client = createClient(url, events)
 
@@ -86,7 +86,7 @@ try {
 ### Basic Handler
 
 ```typescript
-import { createElysiaWS } from '@mdrv/wsx/v001/server'
+import { createElysiaWS } from '@mdrv/wsx/server'
 
 const { server, handler } = createElysiaWS(events)
 

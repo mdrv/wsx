@@ -27,7 +27,7 @@ bun add @mdrv/wsx zod cbor-x elysia
 
 ```typescript
 // Define events
-import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { defineEvents } from '@mdrv/wsx/shared'
 import { z } from 'zod'
 
 export const events = defineEvents({
@@ -38,7 +38,7 @@ export const events = defineEvents({
 })
 
 // Server
-import { createElysiaWS } from '@mdrv/wsx/v001/server'
+import { createElysiaWS } from '@mdrv/wsx/server'
 import { Elysia } from 'elysia'
 
 const { server, handler } = createElysiaWS(events)
@@ -46,7 +46,7 @@ server.onRequest('ping', async payload => ({ pong: 'Hello!' }))
 new Elysia().ws('/ws', handler).listen(3000)
 
 // Client
-import { createClient } from '@mdrv/wsx/v001/client'
+import { createClient } from '@mdrv/wsx/client'
 
 const client = createClient('ws://localhost:3000/ws', events)
 client.connect()

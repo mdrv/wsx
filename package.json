@@ -32,6 +32,18 @@
 			".": {
 				"default": "./dist/index.mjs",
 				"types": "./dist/index.d.mts"
+			},
+			"./client": {
+				"default": "./dist/client/index.mjs",
+				"types": "./dist/client/index.d.mts"
+			},
+			"./server": {
+				"default": "./dist/server/index.mjs",
+				"types": "./dist/server/index.d.mts"
+			},
+			"./shared": {
+				"default": "./dist/shared/index.mjs",
+				"types": "./dist/shared/index.d.mts"
 			}
 		}
 	},

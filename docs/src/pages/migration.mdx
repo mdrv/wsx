@@ -76,7 +76,7 @@ const events = {
 }
 
 // After
-import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { defineEvents } from '@mdrv/wsx/shared'
 import { z } from 'zod'
 const events = defineEvents({
   ping: {
@@ -95,7 +95,7 @@ client.x.notify({ message: 'hello' })
 const result = await client.w.getData({ id: '123' })
 
 // After
-import { createClient } from '@mdrv/wsx/v001/client'
+import { createClient } from '@mdrv/wsx/client'
 const client = createClient(url, events)
 client.send('notify', { message: 'hello' })
 const result = await client.request('getData', { id: '123' })
@@ -113,7 +113,7 @@ wsz.respond(e)({
 })
 
 // After
-import { createElysiaWS } from '@mdrv/wsx/v001/server'
+import { createElysiaWS } from '@mdrv/wsx/server'
 const { server, handler } = createElysiaWS(events)
 server.onRequest('getData', async (payload) => {
   return { name: 'Alice' }

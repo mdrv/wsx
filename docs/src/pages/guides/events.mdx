@@ -13,7 +13,7 @@ Learn how to define type-safe event schemas for your WebSocket communication.
 Events are defined using `defineEvents()` with Zod schemas:
 
 ```typescript
-import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { defineEvents } from '@mdrv/wsx/shared'
 import { z } from 'zod'
 
 const events = defineEvents({
@@ -195,7 +195,7 @@ const events = defineEvents({
 Extract TypeScript types from your event definitions:
 
 ```typescript
-import type { InferEventPayload, InferEventResponse } from '@mdrv/wsx/v001/shared'
+import type { InferEventPayload, InferEventResponse } from '@mdrv/wsx/shared'
 
 const events = defineEvents({
   getData: {
@@ -224,7 +224,7 @@ Create a shared file that both client and server import:
 
 ```typescript
 // shared/events.ts
-import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { defineEvents } from '@mdrv/wsx/shared'
 import { z } from 'zod'
 
 export const events = defineEvents({
