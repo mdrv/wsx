@@ -6,11 +6,17 @@ import Navigation from '../components/Navigation.astro'
 import '../index.css'
 
 interface Props {
-	title: string
+	title?: string
 	description?: string
+	frontmatter?: {
+		title?: string
+		description?: string
+	}
 }
 
-const { title, description } = Astro.props
+const props = Astro.props
+const title = props.frontmatter?.title || props.title || 'Documentation'
+const description = props.frontmatter?.description || props.description
 const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 ---
 

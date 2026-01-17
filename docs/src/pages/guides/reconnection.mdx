@@ -69,14 +69,14 @@ const client = createClient(url, events, {
 
 Delays grow exponentially between retries:
 
-```text
+<pre style="background: var(--code-bg); padding: 1rem; border-radius: 0.375rem; overflow-x: auto; color: var(--text-secondary);">
 Retry 1: 1000ms  (minDelay)
 Retry 2: 1300ms  (1000 * 1.3)
 Retry 3: 1690ms  (1300 * 1.3)
 Retry 4: 2197ms  (1690 * 1.3)
 ...
 Retry N: 30000ms (maxDelay reached)
-```
+</pre>
 
 ## Message Queuing
 
