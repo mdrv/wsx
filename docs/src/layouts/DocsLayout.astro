@@ -40,9 +40,10 @@ const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 				overflow: 'hidden',
 			})}
 		>
-			<!-- Sidebar -->
+			<!-- Sidebar - Hidden on mobile -->
 			<aside
 				class={css({
+					display: { base: 'none', md: 'block' },
 					width: '16rem',
 					borderRight: '1px solid',
 					borderColor: 'gray.200',
@@ -58,7 +59,7 @@ const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
 				class={css({
 					flex: 1,
 					overflowY: 'auto',
-					padding: '2rem 3rem',
+					padding: { base: '1rem', sm: '1.5rem', md: '2rem 3rem' },
 					maxWidth: '56rem',
 				})}
 			>

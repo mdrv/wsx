@@ -10,16 +10,17 @@ import { css } from '../../styled-system/css'
 		backgroundColor: 'white',
 		display: 'flex',
 		alignItems: 'center',
-		padding: '0 1.5rem',
-		gap: '2rem',
+		padding: { base: '0 1rem', md: '0 1.5rem' },
+		gap: { base: '1rem', md: '2rem' },
 	})}
 >
 	<a
 		href='/wsx/'
 		class={css({
-			fontSize: 'xl',
+			fontSize: { base: 'lg', md: 'xl' },
 			fontWeight: 'bold',
 			color: 'brand.600',
+			whiteSpace: 'nowrap',
 			_hover: {
 				color: 'brand.700',
 				textDecoration: 'none',
@@ -29,7 +30,13 @@ import { css } from '../../styled-system/css'
 		@mdrv/wsx
 	</a>
 
-	<nav class={css({ display: 'flex', gap: '1.5rem', flex: 1 })}>
+	<nav
+		class={css({
+			display: { base: 'none', sm: 'flex' },
+			gap: '1.5rem',
+			flex: 1,
+		})}
+	>
 		<a
 			href='/wsx/'
 			class={css({
@@ -59,13 +66,21 @@ import { css } from '../../styled-system/css'
 		</a>
 	</nav>
 
-	<div class={css({ display: 'flex', gap: '1rem', alignItems: 'center' })}>
+	<div
+		class={css({
+			display: 'flex',
+			gap: '1rem',
+			alignItems: 'center',
+			marginLeft: 'auto',
+		})}
+	>
 		<a
 			href='https://github.com/mdrv/wsx'
 			target='_blank'
 			rel='noopener noreferrer'
 			class={css({
 				color: 'gray.600',
+				display: { base: 'none', sm: 'block' },
 				_hover: { color: 'gray.900' },
 			})}
 		>
@@ -76,7 +91,7 @@ import { css } from '../../styled-system/css'
 			target='_blank'
 			rel='noopener noreferrer'
 			class={css({
-				padding: '0.5rem 1rem',
+				padding: { base: '0.375rem 0.75rem', sm: '0.5rem 1rem' },
 				backgroundColor: 'brand.600',
 				color: 'white',
 				borderRadius: 'md',

@@ -1,8 +1,11 @@
 # documentation Specification
 
 ## Purpose
+
 TBD - created by archiving change add-github-pages-docs. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Documentation Site Hosting
 
 The project SHALL host comprehensive documentation on GitHub Pages using Astro framework in the `/docs` directory.
@@ -140,4 +143,3 @@ The main project README SHALL link to the documentation site for comprehensive i
 - **WHEN** a user reads the main README.md
 - **THEN** a prominent link to the documentation site SHALL be present
 - **AND** the link SHALL direct to the GitHub Pages URL
-
