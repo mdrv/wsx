@@ -2,9 +2,9 @@
 
 ## Purpose
 
-TBD - created by archiving change add-github-pages-docs. Update Purpose after archive.
+Provide comprehensive, searchable, and accessible documentation for the @mdrv/wsx library through a GitHub Pages-hosted Astro site with search functionality and theme customization.
 
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Documentation Site Hosting
 
@@ -23,48 +23,6 @@ The project SHALL host comprehensive documentation on GitHub Pages using Astro f
 - **AND** all pages SHALL be rendered without errors
 - **AND** the output SHALL be placed in `/docs/dist`
 - **AND** Pagefind search indexing SHALL run after build
-
-### Requirement: Content Organization
-
-The documentation SHALL be organized into clear sections covering getting started, API reference, usage guides, examples, and migration information.
-
-#### Scenario: Navigation structure is clear
-
-- **WHEN** a user visits the documentation site
-- **THEN** a navigation sidebar SHALL display all sections
-- **AND** sections SHALL include: Getting Started, API Reference, Guides, Examples, Migration
-
-#### Scenario: API reference is comprehensive
-
-- **WHEN** a user navigates to API Reference section
-- **THEN** documentation SHALL cover Client API, Server API, and Shared utilities
-- **AND** each API method SHALL have TypeScript signatures
-- **AND** each API method SHALL include usage examples
-
-#### Scenario: Examples are included
-
-- **WHEN** a user navigates to Examples section
-- **THEN** all three examples SHALL be documented (ping-pong, chat, auth)
-- **AND** each example SHALL include complete, runnable code
-- **AND** each example SHALL explain the key concepts demonstrated
-
-### Requirement: Styling with Panda CSS
-
-The documentation site SHALL use Panda CSS for styling following project conventions.
-
-#### Scenario: Panda CSS is configured
-
-- **WHEN** the documentation is built
-- **THEN** Panda CSS SHALL be integrated with Astro
-- **AND** styling SHALL use type-safe Panda CSS utilities
-- **AND** custom design tokens SHALL be defined for consistency
-
-#### Scenario: Custom minimal theme
-
-- **WHEN** a user views the documentation
-- **THEN** the site SHALL have a custom minimal design
-- **AND** the design SHALL be clean and readable
-- **AND** the design SHALL be responsive on mobile and desktop
 
 ### Requirement: Search Functionality
 
@@ -90,17 +48,6 @@ The documentation site SHALL provide search functionality powered by Pagefind to
 - **THEN** Astro SHALL build the site first
 - **AND** Pagefind SHALL index all HTML pages
 - **AND** search index SHALL be output to `dist/pagefind/`
-
-### Requirement: Code Highlighting
-
-The documentation SHALL display code examples with syntax highlighting for TypeScript.
-
-#### Scenario: Code blocks are highlighted
-
-- **WHEN** a documentation page contains code blocks
-- **THEN** TypeScript code SHALL be syntax highlighted
-- **AND** code blocks SHALL be copyable
-- **AND** highlighting SHALL work for other languages (JSON, bash, etc.)
 
 ### Requirement: Build Scripts Convention
 
@@ -154,15 +101,7 @@ The documentation site SHALL be fully responsive and accessible on all device si
 - **AND** ARIA labels SHALL be present where needed
 - **AND** keyboard navigation SHALL work for all interactive elements
 
-### Requirement: Integration with Main README
-
-The main project README SHALL link to the documentation site for comprehensive information.
-
-#### Scenario: README links to docs
-
-- **WHEN** a user reads the main README.md
-- **THEN** a prominent link to the documentation site SHALL be present
-- **AND** the link SHALL direct to the GitHub Pages URL
+## ADDED Requirements
 
 ### Requirement: Dark Mode Support
 
