@@ -1,0 +1,276 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 'Authentication Example'
+description: 'Protected endpoints with authentication using @mdrv/wsx'
+---
+
+# Authentication Example
+
+This example demonstrates how to implement authentication and authorization in WebSocket applications using @mdrv/wsx.
+
+## Features
+
+- Token-based authentication
+- Protected endpoints
+- Per-connection authorization
+- Error handling for unauthorized access
+- Session management
+
+## Source Code
+
+View the complete source code on [GitHub](https://github.com/mdrv/wsx/tree/main/src/examples/03-auth).
+
+## Event Definitions
+
+```typescript
+// events.ts
+import { z } from 'zod'
+import { defineEvents } from '@mdrv/wsx/shared'
+
+export const events = defineEvents({
+  // Authenticate with token
+  auth: {
+    request: z.object({
+      token: z.string(),
+    }),
+    response: z.object({
+      success: z.boolean(),
+      user: z.object({
+        id: z.string(),
+        username: z.string(),
+      }).optional(),
+    }),
+  },
+
+  // Protected action - requires authentication
+  getData: {
+    request: z.object({
+      id: z.string(),
+    }),
+    response: z.object({
+      data: z.string(),
+    }),
+  },
+})
+```
+
+## Server Implementation
+
+The server validates tokens and protects endpoints:
+
+```typescript
+// server.ts
+import { Elysia } from 'elysia'
+import { createElysiaWS } from '@mdrv/wsx/server'
+import { events } from './events.ts'
+
+// Store authenticated users per connection
+const authenticatedUsers = new Map()
+
+const { server, handler } = createElysiaWS(events, {
+  debug: true,
+  validate: true,
+})
+
+// Handle authentication
+server.onRequest('auth', async (payload, ws) => {
+  // Validate token (in production, verify JWT, check database, etc.)
+  if (payload.token === 'secret-token') {
+    const user = {
+      id: '123',
+      username: 'demo-user',
+    }
+    
+    // Store authenticated user for this connection
+    authenticatedUsers.set(ws, user)
+
+    return {
+      success: true,
+      user,
+    }
+  }
+
+  return {
+    success: false,
+  }
+})
+
+// Protected endpoint - requires authentication
+server.onRequest('getData', async (payload, ws) => {
+  const user = authenticatedUsers.get(ws)
+
+  if (!user) {
+    throw new Error('Unauthorized. Please authenticate first.')
+  }
+
+  console.log(`User ${user.username} requested data: ${payload.id}`)
+
+  return {
+    data: `Secret data for ${payload.id}`,
+  }
+})
+
+// Clean up auth state on disconnect
+const enhancedHandler = {
+  ...handler,
+  close(ws, code, reason) {
+    authenticatedUsers.delete(ws)
+    handler.close(ws, code, reason)
+  },
+}
+
+new Elysia().ws('/ws', enhancedHandler).listen(3002)
+```
+
+## Client Implementation
+
+```typescript
+// client.ts
+import { createClient } from '@mdrv/wsx/client'
+import { events } from './events.ts'
+
+const token = process.argv[2] || 'secret-token'
+
+const client = createClient('ws://localhost:3002/ws', events, {
+  debug: true,
+  validate: true,
+})
+
+client.connect()
+
+client.onOpen(async () => {
+  console.log('Connected!')
+
+  try {
+    // Step 1: Authenticate
+    console.log('Authenticating with token:', token)
+    const authResult = await client.request('auth', { token })
+
+    if (authResult.success) {
+      console.log('Authenticated as:', authResult.user?.username)
+
+      // Step 2: Access protected data
+      const dataResult = await client.request('getData', {
+        id: 'item-123',
+      })
+      console.log('Received data:', dataResult.data)
+    } else {
+      console.log('Authentication failed')
+    }
+  } catch (error) {
+    console.error('Error:', error)
+  }
+
+  // Cleanup
+  setTimeout(() => {
+    client.close()
+  }, 1000)
+})
+```
+
+## Running the Example
+
+### Start the Server
+
+```bash
+bun src/examples/03-auth/server.ts
+```
+
+Output:
+```
+Auth server running on http://localhost:3002
+Use token "secret-token" to authenticate
+```
+
+### Test with Valid Token
+
+```bash
+# Terminal 2
+bun src/examples/03-auth/client.ts secret-token
+```
+
+Output:
+```
+Connected!
+Authenticating with token: secret-token
+Authenticated as: demo-user
+Received data: Secret data for item-123
+```
+
+### Test with Invalid Token
+
+```bash
+# Terminal 3
+bun src/examples/03-auth/client.ts wrong-token
+```
+
+Output:
+```
+Connected!
+Authenticating with token: wrong-token
+Authentication failed
+```
+
+### Test Unauthorized Access
+
+Modify the client to skip authentication and call `getData` directly - you'll receive an error:
+
+```
+Error: Unauthorized. Please authenticate first.
+```
+
+## Key Concepts
+
+**Per-Connection State**
+- Each WebSocket connection has its own auth state
+- Use `Map<WebSocket, User>` to track authenticated users
+- Clean up state in the `close` handler
+
+**Authentication Flow**
+1. Client connects to WebSocket
+2. Client sends auth request with credentials
+3. Server validates and stores user data for this connection
+4. Client can now access protected endpoints
+
+**Authorization Checks**
+- Check authentication before processing protected requests
+- Throw errors for unauthorized access
+- Errors are automatically sent back to client as error responses
+
+**Production Considerations**
+- Use JWT tokens instead of plain strings
+- Verify tokens using proper crypto libraries
+- Store sessions in Redis for multi-server deployments
+- Implement token refresh mechanisms
+- Add rate limiting
+- Log authentication attempts
+
+## Security Best Practices
+
+**Token Management**
+```typescript
+import * as jose from 'jose'
+
+// Verify JWT token
+const secret = new TextEncoder().encode(process.env.JWT_SECRET)
+const { payload } = await jose.jwtVerify(token, secret)
+```
+
+**HTTPS/WSS**
+- Always use WSS (WebSocket Secure) in production
+- Encrypt tokens in transit
+
+**Error Handling**
+- Don't leak sensitive information in error messages
+- Log failed auth attempts for monitoring
+
+**Session Expiry**
+- Implement token expiration
+- Force re-authentication after timeout
+
+## Next Steps
+
+- **[Ping-Pong Example](/wsx/examples/ping-pong)** - Basic patterns
+- **[Chat Example](/wsx/examples/chat)** - Multi-user communication
+- **[Validation Guide](/wsx/guides/validation)** - Schema validation
+- **[API Reference](/wsx/api)** - Complete API documentation

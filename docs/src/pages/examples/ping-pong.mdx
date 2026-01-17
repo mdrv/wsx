@@ -1,0 +1,264 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 'Ping-Pong Example'
+description: 'Basic request/response and one-way messages with @mdrv/wsx'
+---
+
+# Ping-Pong Example
+
+This example demonstrates the basic request/response pattern and one-way messaging in @mdrv/wsx.
+
+## Features
+
+- Request/response pattern (`ping` -> `pong`)
+- One-way notifications (`notify`)
+- Auto-reconnection handling
+- Type-safe payloads with Zod validation
+
+## Source Code
+
+View the complete source code on [GitHub](https://github.com/mdrv/wsx/tree/main/src/examples/01-ping-pong).
+
+## Event Definitions
+
+First, define the events that both client and server will use:
+
+```typescript
+// events.ts
+import { z } from 'zod'
+import { defineEvents } from '@mdrv/wsx/shared'
+
+export const events = defineEvents({
+  ping: {
+    request: z.object({
+      timestamp: z.number(),
+    }),
+    response: z.object({
+      pong: z.string(),
+      serverTimestamp: z.number(),
+    }),
+  },
+  notify: {
+    request: z.object({
+      message: z.string(),
+    }),
+    // No response - this is a one-way message
+  },
+})
+
+export type Events = typeof events
+```
+
+### Event Types
+
+**`ping`** - Request/response event
+- **Request**: Contains a timestamp from the client
+- **Response**: Returns a pong message and server timestamp
+- **Use case**: Measuring round-trip time, heartbeat checks
+
+**`notify`** - One-way event
+- **Request**: Contains a message string
+- **No response**: Fire-and-forget notification
+- **Use case**: Logging, analytics, non-critical notifications
+
+## Server Implementation
+
+The server handles incoming requests and sends responses:
+
+```typescript
+// server.ts
+import { Elysia } from 'elysia'
+import { createElysiaWS } from '@mdrv/wsx/server'
+import { events } from './events.ts'
+
+const { server, handler } = createElysiaWS(events, {
+  debug: true,
+  validate: true,
+})
+
+// Handle ping requests
+server.onRequest('ping', async (payload) => {
+  console.log('Received ping at:', payload.timestamp)
+  return {
+    pong: 'Hello from server!',
+    serverTimestamp: Date.now(),
+  }
+})
+
+// Handle notification messages
+server.onSend('notify', async (payload) => {
+  console.log('Notification:', payload.message)
+})
+
+const app = new Elysia()
+  .ws('/ws', handler)
+  .listen(3000)
+
+console.log('Server running on http://localhost:3000')
+```
+
+### Key Concepts
+
+**`createElysiaWS(events, options)`**
+- Creates a typed WebSocket server with validation
+- `debug: true` enables logging
+- `validate: true` enables Zod schema validation
+
+**`server.onRequest(eventName, handler)`**
+- Handles request/response events
+- Handler receives validated payload
+- Must return data matching the response schema
+
+**`server.onSend(eventName, handler)`**
+- Handles one-way messages
+- Handler receives validated payload
+- No response expected
+
+## Client Implementation
+
+The client connects to the server and sends requests:
+
+```typescript
+// client.ts
+import { createClient } from '@mdrv/wsx/client'
+import { events } from './events.ts'
+
+const client = createClient('ws://localhost:3000/ws', events, {
+  debug: true,
+  validate: true,
+})
+
+// Connect to server
+client.connect()
+
+// Handle connection events
+client.onOpen(() => {
+  console.log('Connected!')
+
+  // Send a one-way notification
+  client.send('notify', {
+    message: 'Hello from client!',
+  })
+
+  // Send ping requests every 2 seconds
+  setInterval(async () => {
+    try {
+      const response = await client.request('ping', {
+        timestamp: Date.now(),
+      })
+      
+      console.log('Received pong:', response.pong)
+      console.log('Server timestamp:', response.serverTimestamp)
+      
+      const roundTripTime = Date.now() - response.serverTimestamp
+      console.log('Round trip time:', roundTripTime, 'ms')
+    } catch (error) {
+      console.error('Ping failed:', error)
+    }
+  }, 2000)
+})
+
+client.onClose((event) => {
+  console.log('Disconnected:', event.code, event.reason)
+})
+
+client.onError((event) => {
+  console.error('Error:', event)
+})
+```
+
+### Key Concepts
+
+**`createClient(url, events, options)`**
+- Creates a typed WebSocket client
+- Automatically handles reconnection
+- Validates all messages with Zod
+
+**`client.request(eventName, payload)`**
+- Sends a request and waits for response
+- Returns a Promise with typed response
+- Throws on timeout or validation errors
+
+**`client.send(eventName, payload)`**
+- Sends a one-way message (fire-and-forget)
+- No response expected
+- Returns immediately
+
+**Connection Lifecycle Handlers**
+- `onOpen()` - Connection established
+- `onClose()` - Connection closed
+- `onError()` - Connection error occurred
+
+## Running the Example
+
+### Prerequisites
+
+```bash
+# Clone the repository
+git clone https://github.com/mdrv/wsx.git
+cd wsx
+
+# Install dependencies
+bun install
+```
+
+### Start the Server
+
+```bash
+# Terminal 1
+bun src/examples/01-ping-pong/server.ts
+```
+
+Output:
+```
+Server running on http://localhost:3000
+```
+
+### Start the Client
+
+```bash
+# Terminal 2
+bun src/examples/01-ping-pong/client.ts
+```
+
+Output:
+```
+Connected!
+Notification: Hello from client!
+Received pong: Hello from server!
+Server timestamp: 1705507200000
+Round trip time: 5 ms
+```
+
+The client will send ping requests every 2 seconds and log the responses.
+
+## Testing Reconnection
+
+To test auto-reconnection:
+
+1. Start both server and client
+2. Stop the server (Ctrl+C in Terminal 1)
+3. Observe client attempting to reconnect
+4. Restart the server
+5. Client automatically reconnects and resumes sending pings
+
+The client will queue messages while disconnected and send them once reconnected.
+
+## What You Learned
+
+This example demonstrates:
+
+- Defining typed events with Zod schemas
+- Setting up an Elysia WebSocket server
+- Creating a typed WebSocket client
+- Handling request/response communication
+- Sending one-way messages
+- Managing connection lifecycle
+- Measuring round-trip latency
+
+## Next Steps
+
+- **[Chat Example](/wsx/examples/chat)** - Multi-user chat with broadcasting
+- **[Auth Example](/wsx/examples/auth)** - Protected endpoints with authentication
+- **[Request/Response Guide](/wsx/guides/request-response)** - Deep dive into request/response pattern
+- **[API Reference](/wsx/api)** - Complete API documentation

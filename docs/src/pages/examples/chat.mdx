@@ -1,0 +1,261 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 'Chat Application Example'
+description: 'Multi-user chat with rooms and broadcasting using @mdrv/wsx'
+---
+
+# Chat Application Example
+
+This example demonstrates a real-time multi-user chat application with rooms and message broadcasting.
+
+## Features
+
+- Multiple chat rooms
+- User join/leave notifications
+- Message broadcasting to all users in a room
+- Per-connection user state management
+- Real-time message delivery
+
+## Source Code
+
+View the complete source code on [GitHub](https://github.com/mdrv/wsx/tree/main/src/examples/02-chat).
+
+## Event Definitions
+
+```typescript
+// events.ts
+import { z } from 'zod'
+import { defineEvents } from '@mdrv/wsx/shared'
+
+export const events = defineEvents({
+  // Join a chat room
+  join: {
+    request: z.object({
+      username: z.string().min(1).max(50),
+      room: z.string().default('general'),
+    }),
+    response: z.object({
+      success: z.boolean(),
+      message: z.string(),
+      users: z.array(z.string()),
+    }),
+  },
+
+  // Send a chat message
+  sendMessage: {
+    request: z.object({
+      message: z.string().min(1).max(500),
+    }),
+    response: z.object({
+      messageId: z.string(),
+      timestamp: z.number(),
+    }),
+  },
+
+  // Receive chat messages (server -> client)
+  message: {
+    request: z.object({
+      messageId: z.string(),
+      username: z.string(),
+      message: z.string(),
+      timestamp: z.number(),
+    }),
+  },
+
+  // User joined notification
+  userJoined: {
+    request: z.object({
+      username: z.string(),
+    }),
+  },
+
+  // User left notification
+  userLeft: {
+    request: z.object({
+      username: z.string(),
+    }),
+  },
+})
+```
+
+##Server Implementation
+
+The server manages rooms and broadcasts messages:
+
+```typescript
+// server.ts (simplified)
+import { Elysia } from 'elysia'
+import { createElysiaWS } from '@mdrv/wsx/server'
+import { events } from './events.ts'
+
+// In-memory state
+const users = new Map()
+const rooms = new Map()
+
+const { server, handler } = createElysiaWS(events, {
+  debug: true,
+  validate: true,
+})
+
+// Handle join requests
+server.onRequest('join', async (payload, ws) => {
+  // Store user info
+  users.set(ws, {
+    username: payload.username,
+    room: payload.room,
+    ws,
+  })
+
+  // Add to room
+  if (!rooms.has(payload.room)) {
+    rooms.set(payload.room, new Set())
+  }
+  rooms.get(payload.room).add(ws)
+
+  // Get all users in room
+  const roomUsers = Array.from(rooms.get(payload.room))
+    .map(ws => users.get(ws)?.username)
+    .filter(Boolean)
+
+  // Notify others in room
+  broadcast(payload.room, ws, 'userJoined', {
+    username: payload.username,
+  })
+
+  return {
+    success: true,
+    message: `Welcome to ${payload.room}!`,
+    users: roomUsers,
+  }
+})
+
+// Handle chat messages
+server.onRequest('sendMessage', async (payload, ws) => {
+  const user = users.get(ws)
+  if (!user) throw new Error('User not found')
+
+  const messageId = `${Date.now()}-${Math.random()}`
+  const timestamp = Date.now()
+
+  // Broadcast to all users in room
+  broadcast(user.room, undefined, 'message', {
+    messageId,
+    username: user.username,
+    message: payload.message,
+    timestamp,
+  })
+
+  return { messageId, timestamp }
+})
+
+// Clean up on disconnect
+const enhancedHandler = {
+  ...handler,
+  close(ws, code, reason) {
+    const user = users.get(ws)
+    if (user) {
+      rooms.get(user.room)?.delete(ws)
+      broadcast(user.room, ws, 'userLeft', {
+        username: user.username,
+      })
+    }
+    users.delete(ws)
+    handler.close(ws, code, reason)
+  },
+}
+
+new Elysia().ws('/ws', enhancedHandler).listen(3001)
+```
+
+## Client Implementation
+
+```typescript
+// client.ts
+import { createClient } from '@mdrv/wsx/client'
+import { events } from './events.ts'
+
+const username = process.argv[2] || 'user-123'
+const room = process.argv[3] || 'general'
+
+const client = createClient('ws://localhost:3001/ws', events)
+
+// Listen for chat messages
+client.on('message', (msg) => {
+  console.log(`[${new Date(msg.timestamp).toLocaleTimeString()}] ${msg.username}: ${msg.message}`)
+})
+
+// Listen for user join/leave
+client.on('userJoined', (data) => {
+  console.log(`>>> ${data.username} joined the room`)
+})
+
+client.on('userLeft', (data) => {
+  console.log(`<<< ${data.username} left the room`)
+})
+
+client.connect()
+
+client.onOpen(async () => {
+  // Join the room
+  const result = await client.request('join', {
+    username,
+    room,
+  })
+
+  console.log(result.message)
+  console.log('Users in room:', result.users.join(', '))
+
+  // Read from stdin and send messages
+  process.stdin.on('data', async (chunk) => {
+    const message = chunk.toString().trim()
+    if (message) {
+      await client.request('sendMessage', { message })
+    }
+  })
+})
+```
+
+## Running the Example
+
+### Start the Server
+
+```bash
+bun src/examples/02-chat/server.ts
+```
+
+### Start Multiple Clients
+
+```bash
+# Terminal 2 - Alice in general room
+bun src/examples/02-chat/client.ts alice
+
+# Terminal 3 - Bob in general room
+bun src/examples/02-chat/client.ts bob
+
+# Terminal 4 - Charlie in lobby room
+bun src/examples/02-chat/client.ts charlie lobby
+```
+
+### Usage
+
+Type messages in any client terminal and press Enter to send. Messages are broadcast to all users in the same room.
+
+## Key Concepts
+
+**Broadcasting**
+- Messages are sent to all users in a room except the sender
+- Uses `TypedWSConnection` to send messages from server
+
+**State Management**
+- Per-connection state tracks username and room
+- Rooms are managed in a `Map<string, Set<WebSocket>>`
+
+**Lifecycle Handling**
+- Join event adds user to room
+- Close event removes user and notifies others
+
+## Next Steps
+
+- **[Auth Example](/wsx/examples/auth)** - Add authentication
+- **[Ping-Pong Example](/wsx/examples/ping-pong)** - Basic patterns
+- **[API Reference](/wsx/api)** - Complete API documentation
