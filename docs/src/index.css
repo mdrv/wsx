@@ -1,0 +1,41 @@
+@layer reset, base, tokens, recipes, utilities;
+
+@layer base {
+  body {
+    font-family: var(--fonts-body);
+    color: var(--colors-gray-900);
+    background-color: var(--colors-gray-50);
+    line-height: 1.6;
+  }
+
+  code {
+    font-family: var(--fonts-mono);
+    font-size: 0.9em;
+    background-color: var(--colors-gray-100);
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+
+  pre {
+    font-family: var(--fonts-mono);
+    background-color: var(--colors-gray-900);
+    color: var(--colors-gray-50);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+  }
+
+  pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+
+  a {
+    color: var(--colors-brand-600);
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+}

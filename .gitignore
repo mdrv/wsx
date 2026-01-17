@@ -3,3 +3,5 @@ dist/
 *.log
 .DS_Store
 bun.lockb
+docs/styled-system/
+docs/dist/

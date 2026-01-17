@@ -141,7 +141,7 @@ export class ReconnectingWS {
 
 		this.wait()
 			.then(() => this.resolveUrl())
-			.then((url) => {
+			.then(url => {
 				if (this.closeCalled) {
 					return
 				}
@@ -163,7 +163,7 @@ export class ReconnectingWS {
 					this.handleTimeout()
 				}, this.options.connectionTimeout)
 			})
-			.catch((error) => {
+			.catch(error => {
 				this.debug('connection error', error)
 				this.connectLock = false
 				this.connect()
@@ -233,7 +233,7 @@ export class ReconnectingWS {
 	}
 
 	private wait(): Promise<void> {
-		return new Promise((resolve) => {
+		return new Promise(resolve => {
 			setTimeout(resolve, this.getNextDelay())
 		})
 	}

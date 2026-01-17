@@ -19,7 +19,7 @@ const { server, handler } = createElysiaWS(events, {
 })
 
 // Handle join requests
-server.onRequest('join', async (payload) => {
+server.onRequest('join', async payload => {
 	const ws = (arguments as any)[1] as ServerWebSocket<any> // Get WS from context
 
 	// Store user
@@ -37,7 +37,7 @@ server.onRequest('join', async (payload) => {
 
 	// Get all users in room
 	const roomUsers = Array.from(rooms.get(payload.room)!)
-		.map((ws) => users.get(ws)?.username)
+		.map(ws => users.get(ws)?.username)
 		.filter(Boolean) as string[]
 
 	// Notify others in room
@@ -55,7 +55,7 @@ server.onRequest('join', async (payload) => {
 })
 
 // Handle chat messages
-server.onRequest('sendMessage', async (payload) => {
+server.onRequest('sendMessage', async payload => {
 	const ws = (arguments as any)[1] as ServerWebSocket<any>
 	const user = users.get(ws)
 

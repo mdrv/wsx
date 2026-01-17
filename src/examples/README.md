@@ -105,7 +105,7 @@ import { createElysiaWS } from '../../server/index.ts'
 
 const { server, handler } = createElysiaWS(events)
 
-server.onRequest('myEvent', async (payload) => {
+server.onRequest('myEvent', async payload => {
 	return { result: 'ok' }
 })
 

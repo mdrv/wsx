@@ -1,0 +1,94 @@
+---
+import { css } from '../../styled-system/css'
+---
+
+<header
+	class={css({
+		height: '4rem',
+		borderBottom: '1px solid',
+		borderColor: 'gray.200',
+		backgroundColor: 'white',
+		display: 'flex',
+		alignItems: 'center',
+		padding: '0 1.5rem',
+		gap: '2rem',
+	})}
+>
+	<a
+		href='/wsx/'
+		class={css({
+			fontSize: 'xl',
+			fontWeight: 'bold',
+			color: 'brand.600',
+			_hover: {
+				color: 'brand.700',
+				textDecoration: 'none',
+			},
+		})}
+	>
+		@mdrv/wsx
+	</a>
+
+	<nav class={css({ display: 'flex', gap: '1.5rem', flex: 1 })}>
+		<a
+			href='/wsx/'
+			class={css({
+				color: 'gray.700',
+				_hover: { color: 'brand.600' },
+			})}
+		>
+			Docs
+		</a>
+		<a
+			href='/wsx/api'
+			class={css({
+				color: 'gray.700',
+				_hover: { color: 'brand.600' },
+			})}
+		>
+			API
+		</a>
+		<a
+			href='/wsx/examples'
+			class={css({
+				color: 'gray.700',
+				_hover: { color: 'brand.600' },
+			})}
+		>
+			Examples
+		</a>
+	</nav>
+
+	<div class={css({ display: 'flex', gap: '1rem', alignItems: 'center' })}>
+		<a
+			href='https://github.com/mdrv/wsx'
+			target='_blank'
+			rel='noopener noreferrer'
+			class={css({
+				color: 'gray.600',
+				_hover: { color: 'gray.900' },
+			})}
+		>
+			GitHub
+		</a>
+		<a
+			href='https://www.npmjs.com/package/@mdrv/wsx'
+			target='_blank'
+			rel='noopener noreferrer'
+			class={css({
+				padding: '0.5rem 1rem',
+				backgroundColor: 'brand.600',
+				color: 'white',
+				borderRadius: 'md',
+				fontSize: 'sm',
+				fontWeight: 'medium',
+				_hover: {
+					backgroundColor: 'brand.700',
+					textDecoration: 'none',
+				},
+			})}
+		>
+			v1.0.0
+		</a>
+	</div>
+</header>

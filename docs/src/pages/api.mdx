@@ -1,0 +1,46 @@
+---
+layout: ../layouts/DocsLayout.astro
+title: 'API Reference'
+description: 'Complete API reference for @mdrv/wsx'
+---
+
+# API Reference
+
+Complete API documentation for @mdrv/wsx.
+
+## Client API
+
+- [Client API](/wsx/api/client) - Full client API reference
+- [Connection management](/wsx/api/client#connection)
+- [Sending messages](/wsx/api/client#messaging)
+- [Event listeners](/wsx/api/client#events)
+
+## Server API
+
+- [Server API](/wsx/api/server) - Full server API reference  
+- [Event handlers](/wsx/api/server#handlers)
+- [Connection management](/wsx/api/server#connections)
+- [Elysia integration](/wsx/api/server#elysia)
+
+## Shared API
+
+- [Shared API](/wsx/api/shared) - Types and utilities
+- [Event definitions](/wsx/api/shared#events)
+- [Protocol types](/wsx/api/shared#protocol)
+- [Serializers](/wsx/api/shared#serializers)
+
+## Overview
+
+The library is organized into three main modules:
+
+### `@mdrv/wsx/v001/client`
+
+Browser and Bun client implementation with auto-reconnect and type-safe messaging.
+
+### `@mdrv/wsx/v001/server`
+
+Server-side implementation with Elysia framework adapter.
+
+### `@mdrv/wsx/v001/shared`
+
+Common types, protocol definition, and utilities used by both client and server.

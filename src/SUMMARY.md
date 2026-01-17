@@ -83,7 +83,7 @@ const result = await client.request('myEvent', { msg: 'hello' })
 const response = await client.request('getData', { id: '123' })
 
 // Server handles request
-server.onRequest('getData', async (payload) => {
+server.onRequest('getData', async payload => {
 	return { data: await fetchData(payload.id) }
 })
 ```

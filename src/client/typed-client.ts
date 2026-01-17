@@ -189,7 +189,7 @@ export class TypedWSClient<TEvents extends Record<string, EventDefinition>> {
 	 */
 	onOpen(handler: () => void): void {
 		const existingHandler = this.ws.onopen
-		this.ws.onopen = (event) => {
+		this.ws.onopen = event => {
 			existingHandler?.(event)
 			handler()
 		}
@@ -197,7 +197,7 @@ export class TypedWSClient<TEvents extends Record<string, EventDefinition>> {
 
 	onClose(handler: (event: CloseEvent) => void): void {
 		const existingHandler = this.ws.onclose
-		this.ws.onclose = (event) => {
+		this.ws.onclose = event => {
 			existingHandler?.(event)
 			handler(event)
 		}
@@ -205,7 +205,7 @@ export class TypedWSClient<TEvents extends Record<string, EventDefinition>> {
 
 	onError(handler: (event: Event) => void): void {
 		const existingHandler = this.ws.onerror
-		this.ws.onerror = (event) => {
+		this.ws.onerror = event => {
 			existingHandler?.(event)
 			handler(event)
 		}

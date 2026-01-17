@@ -1,0 +1,147 @@
+---
+import { css } from '../../styled-system/css'
+import Footer from '../components/Footer.astro'
+import Header from '../components/Header.astro'
+import Navigation from '../components/Navigation.astro'
+import '../index.css'
+
+interface Props {
+	title: string
+	description?: string
+}
+
+const { title, description } = Astro.props
+const fullTitle = title === '@mdrv/wsx' ? title : `${title} - @mdrv/wsx`
+---
+
+<!DOCTYPE html>
+<html lang='en'>
+	<head>
+		<meta charset='UTF-8'>
+		<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+		<title>{fullTitle}</title>
+		{description && <meta name='description' content={description} />}
+		<link rel='icon' type='image/svg+xml' href='/wsx/favicon.svg' />
+	</head>
+	<body
+		class={css({
+			margin: 0,
+			display: 'flex',
+			flexDirection: 'column',
+			minHeight: '100vh',
+		})}
+	>
+		<Header />
+
+		<div
+			class={css({
+				display: 'flex',
+				flex: 1,
+				overflow: 'hidden',
+			})}
+		>
+			<!-- Sidebar -->
+			<aside
+				class={css({
+					width: '16rem',
+					borderRight: '1px solid',
+					borderColor: 'gray.200',
+					backgroundColor: 'white',
+					overflowY: 'auto',
+				})}
+			>
+				<Navigation />
+			</aside>
+
+			<!-- Main Content -->
+			<main
+				class={css({
+					flex: 1,
+					overflowY: 'auto',
+					padding: '2rem 3rem',
+					maxWidth: '56rem',
+				})}
+			>
+				<article
+					class={css({
+						'& h1': {
+							fontSize: '3xl',
+							fontWeight: 'bold',
+							marginBottom: '1rem',
+							color: 'gray.900',
+						},
+						'& h2': {
+							fontSize: '2xl',
+							fontWeight: 'bold',
+							marginTop: '2rem',
+							marginBottom: '1rem',
+							color: 'gray.900',
+						},
+						'& h3': {
+							fontSize: 'xl',
+							fontWeight: 'semibold',
+							marginTop: '1.5rem',
+							marginBottom: '0.75rem',
+							color: 'gray.900',
+						},
+						'& p': {
+							marginBottom: '1rem',
+							lineHeight: '1.7',
+						},
+						'& ul, & ol': {
+							marginBottom: '1rem',
+							paddingLeft: '1.5rem',
+						},
+						'& li': {
+							marginBottom: '0.5rem',
+						},
+						'& code': {
+							fontFamily: 'mono',
+							fontSize: '0.9em',
+							backgroundColor: 'gray.100',
+							padding: '0.125rem 0.25rem',
+							borderRadius: '0.25rem',
+						},
+						'& pre': {
+							marginBottom: '1.5rem',
+							borderRadius: 'md',
+							overflow: 'auto',
+						},
+						'& pre code': {
+							backgroundColor: 'transparent',
+							padding: 0,
+						},
+						'& table': {
+							width: '100%',
+							borderCollapse: 'collapse',
+							marginBottom: '1.5rem',
+						},
+						'& th, & td': {
+							padding: '0.75rem',
+							borderBottom: '1px solid',
+							borderColor: 'gray.200',
+							textAlign: 'left',
+						},
+						'& th': {
+							fontWeight: 'semibold',
+							backgroundColor: 'gray.50',
+						},
+						'& blockquote': {
+							borderLeft: '4px solid',
+							borderColor: 'brand.500',
+							paddingLeft: '1rem',
+							marginLeft: 0,
+							marginBottom: '1rem',
+							color: 'gray.700',
+							fontStyle: 'italic',
+						},
+					})}
+				>
+					<slot />
+				</article>
+			</main>
+		</div>
+
+		<Footer />
+	</body>
+</html>

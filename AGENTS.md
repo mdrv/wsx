@@ -26,7 +26,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - Must use latest Panda CSS for complex styling. (guide: https://panda-css.com/docs/docs/installation/svelte)
 - Else, must prefer inline styling (right on HTML tags) in Svelte components.
 - Must utilize Bun and TypeScript on every possible area of code.
-- At the end of agent session, use dprint to format all files in repo.
+- At the end of agent session, use dprint (config: dprint.jsonc) to format all files in repo.
 - All Markdown files (except README) that explains the project must be stored on `/docs` directory.
 - Must always utilize GitHub pages using Astro that lives on `/docs` directory.
 - On package.json scripts:

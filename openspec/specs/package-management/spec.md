@@ -1,8 +1,11 @@
 # package-management Specification
 
 ## Purpose
+
 TBD - created by archiving change rebrand-to-wsx. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Package Identity
 
 The package SHALL be named `@mdrv/wsx` (scoped package under the @mdrv organization) and published to the npm registry under this identifier.
@@ -97,4 +100,3 @@ The package source code SHALL be migrated from `/x/a/a/sv/a/ws` which contains W
 - **WHEN** source files are migrated
 - **THEN** any internal import paths SHALL be updated to reflect the new package structure
 - **AND** external dependencies SHALL be properly declared in package.json
-

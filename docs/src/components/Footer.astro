@@ -1,0 +1,65 @@
+---
+import { css } from '../../styled-system/css'
+---
+
+<footer
+	class={css({
+		borderTop: '1px solid',
+		borderColor: 'gray.200',
+		backgroundColor: 'white',
+		padding: '2rem 1.5rem',
+		marginTop: 'auto',
+	})}
+>
+	<div
+		class={css({
+			maxWidth: '1200px',
+			margin: '0 auto',
+			display: 'flex',
+			justifyContent: 'space-between',
+			alignItems: 'center',
+			flexWrap: 'wrap',
+			gap: '1rem',
+		})}
+	>
+		<div class={css({ color: 'gray.600', fontSize: 'sm' })}>
+			&copy; {new Date().getFullYear()} @mdrv/wsx. MIT License.
+		</div>
+
+		<div class={css({ display: 'flex', gap: '1.5rem', fontSize: 'sm' })}>
+			<a
+				href='https://github.com/mdrv/wsx'
+				target='_blank'
+				rel='noopener noreferrer'
+				class={css({
+					color: 'gray.600',
+					_hover: { color: 'brand.600' },
+				})}
+			>
+				GitHub
+			</a>
+			<a
+				href='https://github.com/mdrv/wsx/issues'
+				target='_blank'
+				rel='noopener noreferrer'
+				class={css({
+					color: 'gray.600',
+					_hover: { color: 'brand.600' },
+				})}
+			>
+				Issues
+			</a>
+			<a
+				href='https://www.npmjs.com/package/@mdrv/wsx'
+				target='_blank'
+				rel='noopener noreferrer'
+				class={css({
+					color: 'gray.600',
+					_hover: { color: 'brand.600' },
+				})}
+			>
+				npm
+			</a>
+		</div>
+	</div>
+</footer>

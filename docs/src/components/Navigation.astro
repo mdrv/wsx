@@ -1,0 +1,124 @@
+---
+import { css } from '../../styled-system/css'
+
+interface NavItem {
+	label: string
+	href: string
+	items?: NavItem[]
+}
+
+const navigation: NavItem[] = [
+	{
+		label: 'Getting Started',
+		href: '/wsx/',
+	},
+	{
+		label: 'Quick Start',
+		href: '/wsx/quick-start',
+	},
+	{
+		label: 'API Reference',
+		href: '/wsx/api',
+		items: [
+			{ label: 'Client API', href: '/wsx/api/client' },
+			{ label: 'Server API', href: '/wsx/api/server' },
+			{ label: 'Shared API', href: '/wsx/api/shared' },
+		],
+	},
+	{
+		label: 'Guides',
+		href: '/wsx/guides',
+		items: [
+			{ label: 'Event Definition', href: '/wsx/guides/events' },
+			{ label: 'Request/Response', href: '/wsx/guides/request-response' },
+			{ label: 'Auto-Reconnection', href: '/wsx/guides/reconnection' },
+			{ label: 'Validation', href: '/wsx/guides/validation' },
+		],
+	},
+	{
+		label: 'Examples',
+		href: '/wsx/examples',
+		items: [
+			{ label: 'Ping-Pong', href: '/wsx/examples/ping-pong' },
+			{ label: 'Chat App', href: '/wsx/examples/chat' },
+			{ label: 'Authentication', href: '/wsx/examples/auth' },
+		],
+	},
+	{
+		label: 'Migration',
+		href: '/wsx/migration',
+	},
+]
+
+const currentPath = Astro.url.pathname
+
+function isActive(href: string) {
+	return currentPath === href || currentPath.startsWith(href + '/')
+}
+---
+
+<nav
+	class={css({
+		height: '100%',
+		overflowY: 'auto',
+		padding: '1.5rem',
+	})}
+>
+	<ul class={css({ listStyle: 'none', padding: 0, margin: 0 })}>
+		{
+			navigation.map((item) => (
+				<li class={css({ marginBottom: '0.5rem' })}>
+					<a
+						href={item.href}
+						class={css({
+							display: 'block',
+							padding: '0.5rem 0.75rem',
+							borderRadius: 'md',
+							color: isActive(item.href) ? 'brand.700' : 'gray.700',
+							backgroundColor: isActive(item.href) ? 'brand.50' : 'transparent',
+							fontWeight: isActive(item.href) ? 'bold' : 'normal',
+							_hover: {
+								backgroundColor: 'brand.50',
+								color: 'brand.700',
+							},
+						})}
+					>
+						{item.label}
+					</a>
+					{
+						item.items && (
+							<ul class={css({ listStyle: 'none', padding: 0, margin: 0, paddingLeft: '1rem' })}>
+								{
+									item.items.map((subItem) => (
+										<li>
+											<a
+												href={subItem.href}
+												class={css({
+													display: 'block',
+													padding: '0.375rem 0.75rem',
+													borderRadius: 'md',
+													color: isActive(subItem.href) ? 'brand.700' : 'gray.600',
+													backgroundColor: isActive(subItem.href)
+														? 'brand.50'
+														: 'transparent',
+													fontSize: 'sm',
+													fontWeight: isActive(subItem.href) ? 'semibold' : 'normal',
+													_hover: {
+														backgroundColor: 'brand.50',
+														color: 'brand.700',
+													},
+												})}
+											>
+												{subItem.label}
+											</a>
+										</li>
+									))
+								}
+							</ul>
+						)
+					}
+				</li>
+			))
+		}
+	</ul>
+</nav>

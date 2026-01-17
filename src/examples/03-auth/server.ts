@@ -15,7 +15,7 @@ const { server, handler } = createElysiaWS(events, {
 })
 
 // Handle authentication
-server.onRequest('auth', async (payload) => {
+server.onRequest('auth', async payload => {
 	const ws = (arguments as any)[1] as ServerWebSocket<any>
 
 	// Simple token validation (in real app, verify JWT, etc.)
@@ -40,7 +40,7 @@ server.onRequest('auth', async (payload) => {
 })
 
 // Protected endpoint
-server.onRequest('getData', async (payload) => {
+server.onRequest('getData', async payload => {
 	const ws = (arguments as any)[1] as ServerWebSocket<any>
 	const user = authenticatedUsers.get(ws)
 

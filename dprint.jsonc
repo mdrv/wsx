@@ -26,7 +26,9 @@
 		"dist",
 		"_docs",
 		"*.min.js",
-		"coverage"
+		"coverage",
+		"docs/styled-system",
+		"docs/dist"
 	],
 	"plugins": [
 		"https://plugins.dprint.dev/markdown-0.20.0.wasm",

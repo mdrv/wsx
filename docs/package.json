@@ -1,0 +1,24 @@
+{
+	"name": "docs",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"prepare": "panda codegen",
+		"d": "astro dev",
+		"s": "astro start",
+		"b": "astro build",
+		"p": "astro preview"
+	},
+	"devDependencies": {
+		"@astrojs/check": "^0.9.6",
+		"@astrojs/mdx": "^4.3.13",
+		"@pandacss/astro": "^0.25.0",
+		"@pandacss/dev": "^1.8.1",
+		"@types/bun": "latest",
+		"astro": "^5.16.11"
+	},
+	"peerDependencies": {
+		"typescript": "^5.9.3"
+	}
+}

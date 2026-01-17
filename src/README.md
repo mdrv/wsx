@@ -56,13 +56,13 @@ const { server, handler } = createElysiaWS(events, {
 })
 
 // Handle request/response
-server.onRequest('ping', async (payload) => {
+server.onRequest('ping', async payload => {
 	console.log('Received ping:', payload.timestamp)
 	return { pong: 'Hello!' }
 })
 
 // Handle one-way messages
-server.onSend('notify', async (payload) => {
+server.onSend('notify', async payload => {
 	console.log('Notification:', payload.message)
 })
 

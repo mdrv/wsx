@@ -1,0 +1,135 @@
+---
+layout: ../layouts/DocsLayout.astro
+title: '@mdrv/wsx'
+description: 'Type-safe WebSocket library with Zod validation for Elysia and browser clients'
+---
+
+import { css } from '../../styled-system/css';
+
+<p class={css({ fontSize: 'xl', color: 'gray.600' })}>
+  Type-safe WebSocket library with Zod validation for Elysia and browser clients.
+</p>
+
+## Features
+
+- **End-to-end type safety** - Full TypeScript support from client to server
+- **Zod validation** - Runtime validation of all messages
+- **Auto-reconnection** - Robust reconnection with exponential backoff
+- **Request/response pattern** - Promise-based RPC over WebSocket
+- **Message queuing** - Queue messages when disconnected
+- **Protocol versioning** - Built-in compatibility checking
+- **CBOR serialization** - Fast binary encoding (JSON also available)
+- **Elysia integration** - First-class Elysia framework support
+
+## Installation
+
+```bash
+bun add @mdrv/wsx zod cbor-x elysia
+```
+
+## Quick Example
+
+### Define Events
+
+```typescript
+// events.ts
+import { defineEvents } from '@mdrv/wsx/v001/shared'
+import { z } from 'zod'
+
+export const events = defineEvents({
+  ping: {
+    request: z.object({ timestamp: z.number() }),
+    response: z.object({ pong: z.string() }),
+  },
+  notify: {
+    request: z.object({ message: z.string() }),
+    // No response = one-way message
+  },
+})
+```
+
+### Server (Elysia)
+
+```typescript
+// server.ts
+import { createElysiaWS } from '@mdrv/wsx/v001/server'
+import { Elysia } from 'elysia'
+import { events } from './events'
+
+const { server, handler } = createElysiaWS(events, {
+  validate: true,
+  debug: true,
+})
+
+server.onRequest('ping', async (payload) => {
+  console.log('Received ping:', payload.timestamp)
+  return { pong: 'Hello!' }
+})
+
+new Elysia()
+  .ws('/ws', handler)
+  .listen(3000)
+```
+
+### Client (Browser/Bun)
+
+```typescript
+// client.ts
+import { createClient } from '@mdrv/wsx/v001/client'
+import { events } from './events'
+
+const client = createClient('ws://localhost:3000/ws', events, {
+  validate: true,
+  debug: true,
+})
+
+client.connect()
+
+client.onOpen(async () => {
+  const result = await client.request('ping', {
+    timestamp: Date.now(),
+  })
+  console.log(result.pong) // "Hello!"
+})
+```
+
+## Architecture
+
+The library is organized into three main parts:
+
+### Shared
+
+Common types, protocol definition, and utilities used by both client and server.
+
+### Client
+
+Browser and Bun client implementation with auto-reconnect and type-safe API.
+
+### Server
+
+Server-side implementation with Elysia framework adapter.
+
+## Next Steps
+
+- [Quick Start Guide](/wsx/quick-start) - Get up and running in 5 minutes
+- [API Reference](/wsx/api) - Full API documentation
+- [Examples](/wsx/examples) - Working examples (ping-pong, chat, auth)
+- [Migration Guide](/wsx/migration) - Migrate from older versions
+
+## Comparison with Alternatives
+
+### vs tRPC
+
+- **tRPC**: RPC-focused, HTTP-based with WebSocket subscriptions
+- **@mdrv/wsx**: WebSocket-first, bidirectional messaging
+- **@mdrv/wsx**: First-class Elysia support (tRPC doesn't have official Elysia adapter)
+
+### vs Socket.IO
+
+- **Socket.IO**: No built-in type safety or validation
+- **@mdrv/wsx**: Full TypeScript + Zod validation
+- **@mdrv/wsx**: Simpler API, less overhead
+
+## License
+
+MIT

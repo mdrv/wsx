@@ -37,10 +37,10 @@ client.onOpen(() => {
 	}, 2000)
 })
 
-client.onClose((event) => {
+client.onClose(event => {
 	console.log('Disconnected:', event.code, event.reason)
 })
 
-client.onError((event) => {
+client.onError(event => {
 	console.error('Error:', event)
 })

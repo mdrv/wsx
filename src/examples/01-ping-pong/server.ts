@@ -8,7 +8,7 @@ const { server, handler } = createElysiaWS(events, {
 })
 
 // Handle ping requests
-server.onRequest('ping', async (payload) => {
+server.onRequest('ping', async payload => {
 	console.log('Received ping at:', payload.timestamp)
 	return {
 		pong: 'Hello from server!',
@@ -17,7 +17,7 @@ server.onRequest('ping', async (payload) => {
 })
 
 // Handle notification messages
-server.onSend('notify', async (payload) => {
+server.onSend('notify', async payload => {
 	console.log('Notification:', payload.message)
 })
 

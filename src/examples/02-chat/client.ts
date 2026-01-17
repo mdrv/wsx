@@ -10,18 +10,18 @@ const client = createClient('ws://localhost:3001/ws', events, {
 })
 
 // Listen for chat messages
-client.on('message', (msg) => {
+client.on('message', msg => {
 	console.log(
 		`[${new Date(msg.timestamp).toLocaleTimeString()}] ${msg.username}: ${msg.message}`,
 	)
 })
 
 // Listen for user join/leave
-client.on('userJoined', (data) => {
+client.on('userJoined', data => {
 	console.log(`>>> ${data.username} joined the room`)
 })
 
-client.on('userLeft', (data) => {
+client.on('userLeft', data => {
 	console.log(`<<< ${data.username} left the room`)
 })
 
@@ -44,7 +44,7 @@ client.onOpen(async () => {
 
 		// Read from stdin and send messages
 		process.stdin.setEncoding('utf8')
-		process.stdin.on('data', async (chunk) => {
+		process.stdin.on('data', async chunk => {
 			const message = chunk.toString().trim()
 			if (message) {
 				try {
