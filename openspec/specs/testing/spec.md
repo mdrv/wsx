@@ -1,8 +1,11 @@
 # testing Specification
 
 ## Purpose
+
 TBD - created by archiving change add-comprehensive-tests. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Test Infrastructure
 
 The project SHALL provide test infrastructure using Bun's built-in test runner with TypeScript support.
@@ -212,4 +215,3 @@ The project SHALL document the testing approach, organization, and how to write 
 - **THEN** each utility function SHALL have JSDoc comments
 - **AND** usage examples SHALL be provided
 - **AND** the purpose of each utility SHALL be clear
-
