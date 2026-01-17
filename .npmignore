@@ -2,9 +2,13 @@ src/
 node_modules/
 openspec/
 .opencode/
+.git/
 *.log
 .DS_Store
 tsdown.config.json
 dprint.jsonc
 AGENTS.md
 bun.lockb
+SUMMARY.md
+src/tests/
+src/examples/

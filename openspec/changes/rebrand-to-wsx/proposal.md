@@ -15,7 +15,7 @@ The project is being rebranded from its previous identity to **@mdrv/wsx** (wsx 
 ## Impact
 
 - Affected specs: `package-management` (new capability)
-- Affected code: 
+- Affected code:
   - New `package.json` configuration
   - New build scripts using tsdown
   - Source files from `/x/a/a/sv/a/ws` (WebSocket/Svelte utilities)

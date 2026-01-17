@@ -1,8 +1,8 @@
 {
 	"name": "@mdrv/wsx",
-	"version": "255.0.0",
-	"description": "WebSocket with action/extended - Enhanced WebSocket utilities for TypeScript and Svelte",
-	"keywords": ["websocket", "svelte", "typescript", "action", "cbor"],
+	"version": "1.0.0",
+	"description": "Type-safe WebSocket library with Zod validation for Elysia and browser clients",
+	"keywords": ["websocket", "typescript", "zod", "elysia", "type-safe", "cbor"],
 	"homepage": "https://github.com/mdrv/wsx",
 	"bugs": {
 		"url": "https://github.com/mdrv/wsx/issues"
@@ -35,18 +35,15 @@
 		}
 	},
 	"dependencies": {
-		"@mdrv/m": "*",
-		"@mdrv/ws": "*",
 		"cbor-x": "^1.6.0",
-		"js-cookie": "^3.0.5",
-		"json-stable-stringify": "^1.1.1",
-		"loglevel": "^1.9.2",
-		"runed": "^0.15.2",
-		"svelte": "^5.0.0"
+		"zod": "^3.24.1"
+	},
+	"peerDependencies": {
+		"elysia": "^1.0.0"
 	},
 	"devDependencies": {
-		"@types/js-cookie": "^3.0.6",
-		"@types/json-stable-stringify": "^1.0.36",
+		"@types/bun": "^1.2.4",
+		"elysia": "^1.2.21",
 		"tsdown": "^0.20.0-beta.3",
 		"typescript": "^5.7.3"
 	}
