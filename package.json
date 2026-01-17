@@ -22,7 +22,8 @@
 		"b": "tsdown",
 		"d": "echo 'dev mode - import from source'",
 		"s": "echo 'start not configured'",
-		"p": "echo 'preview not configured'"
+		"p": "echo 'preview not configured'",
+		"t": "bun test"
 	},
 	"publishConfig": {
 		"main": "./dist/index.mjs",

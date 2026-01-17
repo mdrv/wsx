@@ -1,0 +1,485 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 'Testing'
+description: 'Learn how to test applications built with @mdrv/wsx'
+---
+
+# Testing
+
+This guide covers testing strategies for applications built with @mdrv/wsx, including unit tests, integration tests, and end-to-end tests.
+
+## Overview
+
+@mdrv/wsx is designed to be testable at multiple levels:
+
+- **Unit Tests** - Test individual components in isolation
+- **Integration Tests** - Test client-server communication flows
+- **E2E Tests** - Test complete application workflows
+
+The library includes comprehensive test utilities and helpers to make testing easier.
+
+## Test Utilities
+
+### Test Fixtures
+
+Use predefined event schemas and payloads for consistent testing:
+
+```typescript
+import { testEvents, testPorts } from '@mdrv/wsx/tests/utils/fixtures.ts'
+
+// testEvents provides standard request/response events
+const events = {
+  ping: {
+    request: z.object({ timestamp: z.number() }),
+    response: z.object({ pong: z.string() }),
+  },
+}
+```
+
+### Test Helpers
+
+Common async utilities for WebSocket testing:
+
+```typescript
+import { waitFor, delay, MessageCollector } from '@mdrv/wsx/tests/utils/helpers.ts'
+
+// Wait for a condition with timeout
+await waitFor(() => client.isConnected(), 2000)
+
+// Delay execution
+await delay(100)
+
+// Collect messages for assertions
+const collector = new MessageCollector(client)
+const messages = collector.getMessages('userJoined')
+```
+
+### Custom Assertions
+
+Specialized assertions for WebSocket scenarios:
+
+```typescript
+import { assertConnected, assertMessageReceived } from '@mdrv/wsx/tests/utils/assertions.ts'
+
+await assertConnected(client, 2000)
+await assertMessageReceived(client, 'notify', 1000)
+```
+
+## Unit Testing
+
+### Testing Client Components
+
+Test the typed client in isolation using mock servers:
+
+```typescript
+import { describe, it, expect } from 'bun:test'
+import { TypedWSClient } from '@mdrv/wsx'
+import { MockWSServer } from '@mdrv/wsx/tests/utils/mock-server.ts'
+
+describe('TypedWSClient', () => {
+  it('should send requests and receive responses', async () => {
+    const mockServer = new MockWSServer(events)
+    mockServer.onRequest('ping', async (payload) => ({
+      pong: `Received at ${payload.timestamp}`,
+    }))
+
+    const client = new TypedWSClient(mockServer.url, events)
+    client.connect()
+
+    const response = await client.request('ping', {
+      timestamp: Date.now(),
+    })
+
+    expect(response.pong).toContain('Received at')
+
+    client.close()
+    mockServer.stop()
+  })
+})
+```
+
+### Testing Server Components
+
+Test server handlers using test clients:
+
+```typescript
+import { describe, it, expect } from 'bun:test'
+import { createElysiaWS } from '@mdrv/wsx'
+import { TestClient } from '@mdrv/wsx/tests/utils/test-client.ts'
+
+describe('TypedWSServer', () => {
+  it('should handle requests and send responses', async () => {
+    const { server, handler } = createElysiaWS(events)
+
+    server.onRequest('ping', async (payload) => ({
+      pong: `Pong ${payload.timestamp}`,
+    }))
+
+    const testClient = new TestClient(handler)
+    await testClient.connect()
+
+    const response = await testClient.send('ping', {
+      timestamp: 12345,
+    })
+
+    expect(response).toEqual({ pong: 'Pong 12345' })
+
+    await testClient.disconnect()
+  })
+})
+```
+
+## Integration Testing
+
+### Setting Up Integration Tests
+
+Integration tests verify end-to-end client-server communication:
+
+```typescript
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { Elysia } from 'elysia'
+import { TypedWSClient } from '@mdrv/wsx'
+import { createElysiaWS } from '@mdrv/wsx'
+import { z } from 'zod'
+
+describe('Integration: Request-Response', () => {
+  const PORT = 9000
+  let app: Elysia | null = null
+
+  afterEach(() => {
+    app?.stop()
+    app = null
+  })
+
+  it('should handle successful request-response', async () => {
+    const events = {
+      ping: {
+        request: z.object({ timestamp: z.number() }),
+        response: z.object({ pong: z.string() }),
+      },
+    }
+
+    const { server, handler } = createElysiaWS(events)
+
+    server.onRequest('ping', async (payload) => ({
+      pong: `Received at ${payload.timestamp}`,
+    }))
+
+    app = new Elysia().ws('/ws', handler).listen(PORT)
+
+    const client = new TypedWSClient(
+      `ws://localhost:${PORT}/ws`,
+      events,
+    )
+    client.connect()
+
+    // Wait for connection
+    let connected = false
+    client.onOpen(() => {
+      connected = true
+    })
+    await waitFor(() => connected, 2000)
+
+    // Send request
+    const response = await client.request('ping', {
+      timestamp: Date.now(),
+    })
+
+    expect(response.pong).toContain('Received at')
+
+    client.close()
+  })
+})
+```
+
+### Testing Reconnection
+
+Verify reconnection behavior in integration tests:
+
+```typescript
+it('should reconnect after server restart', async () => {
+  const { server, handler } = createElysiaWS(events)
+
+  // Start server
+  app = new Elysia().ws('/ws', handler).listen(PORT)
+
+  const client = new TypedWSClient(`ws://localhost:${PORT}/ws`, events)
+  client.connect()
+
+  await waitFor(() => client.isConnected(), 2000)
+
+  // Stop server (simulates network failure)
+  app.stop()
+  app = null
+
+  await delay(100)
+
+  // Restart server
+  app = new Elysia().ws('/ws', handler).listen(PORT)
+
+  // Client should auto-reconnect
+  await waitFor(() => client.isConnected(), 5000)
+
+  expect(client.isConnected()).toBe(true)
+
+  client.close()
+})
+```
+
+## End-to-End Testing
+
+### Complete Workflow Testing
+
+E2E tests verify entire application workflows:
+
+```typescript
+describe('E2E: Authentication Flow', () => {
+  it('should complete full auth workflow', async () => {
+    const authEvents = {
+      login: {
+        request: z.object({
+          username: z.string(),
+          password: z.string(),
+        }),
+        response: z.object({
+          success: z.boolean(),
+          token: z.string().optional(),
+        }),
+      },
+      getProfile: {
+        request: z.object({ token: z.string() }),
+        response: z.object({
+          username: z.string(),
+          role: z.string(),
+        }),
+      },
+    }
+
+    const { server, handler } = createElysiaWS(authEvents)
+
+    // Mock authentication logic
+    const sessions = new Map()
+
+    server.onRequest('login', async (payload) => {
+      if (payload.password === 'secret') {
+        const token = `token-${Date.now()}`
+        sessions.set(token, {
+          username: payload.username,
+          role: 'user',
+        })
+        return { success: true, token }
+      }
+      return { success: false }
+    })
+
+    server.onRequest('getProfile', async (payload) => {
+      const session = sessions.get(payload.token)
+      if (!session) throw new Error('Invalid token')
+      return session
+    })
+
+    app = new Elysia().ws('/ws', handler).listen(PORT)
+
+    const client = new TypedWSClient(
+      `ws://localhost:${PORT}/ws`,
+      authEvents,
+    )
+    client.connect()
+
+    await waitFor(() => client.isConnected(), 2000)
+
+    // Login
+    const loginResp = await client.request('login', {
+      username: 'alice',
+      password: 'secret',
+    })
+
+    expect(loginResp.success).toBe(true)
+    expect(loginResp.token).toBeDefined()
+
+    // Get profile with token
+    const profile = await client.request('getProfile', {
+      token: loginResp.token!,
+    })
+
+    expect(profile.username).toBe('alice')
+    expect(profile.role).toBe('user')
+
+    client.close()
+  })
+})
+```
+
+## Best Practices
+
+### Test Organization
+
+Organize tests by type and scope:
+
+```
+tests/
+├── integration/       # Integration tests
+│   ├── connection.test.ts
+│   ├── request-response.test.ts
+│   └── reconnection.test.ts
+├── e2e/              # End-to-end tests
+│   ├── ping-pong.test.ts
+│   ├── auth.test.ts
+│   └── chat.test.ts
+└── utils/            # Test utilities
+    ├── fixtures.ts
+    ├── helpers.ts
+    ├── assertions.ts
+    ├── mock-server.ts
+    └── test-client.ts
+
+src/
+├── client/__tests__/  # Client unit tests
+├── server/__tests__/  # Server unit tests
+└── shared/__tests__/  # Shared unit tests
+```
+
+### Port Management
+
+Use dedicated port ranges to avoid conflicts:
+
+```typescript
+const testPorts = {
+  unit: 9200,
+  integration: 9000,
+  e2e: 9100,
+}
+
+// Use different ports for each test
+const PORT = testPorts.integration + testIndex
+```
+
+### Cleanup
+
+Always clean up resources in `afterEach` hooks:
+
+```typescript
+afterEach(() => {
+  app?.stop()
+  client?.close()
+  app = null
+  client = null
+})
+```
+
+### Async Handling
+
+Use proper async patterns and timeouts:
+
+```typescript
+// Good: Wait for condition with timeout
+await waitFor(() => client.isConnected(), 2000)
+
+// Bad: Fixed delay (unreliable)
+await delay(1000)
+```
+
+### Type Safety
+
+Leverage TypeScript for test type safety:
+
+```typescript
+const events = {
+  ping: {
+    request: z.object({ timestamp: z.number() }),
+    response: z.object({ pong: z.string() }),
+  },
+} as const
+
+type Events = typeof events
+
+const client: TypedWSClient<Events> = new TypedWSClient(url, events)
+
+// TypeScript ensures correct types
+const response = await client.request('ping', { timestamp: 123 })
+// response.pong is typed as string
+```
+
+## Running Tests
+
+### Run All Tests
+
+```bash
+bun test
+```
+
+### Run Specific Test File
+
+```bash
+bun test src/client/__tests__/typed-client.test.ts
+```
+
+### Run Tests with Pattern
+
+```bash
+bun test --filter "reconnection"
+```
+
+### Watch Mode
+
+```bash
+bun test --watch
+```
+
+## Coverage Reporting
+
+Generate test coverage reports:
+
+```bash
+bun test --coverage
+```
+
+View detailed coverage:
+
+```bash
+bun test --coverage --coverage-reporter=html
+open coverage/index.html
+```
+
+## Debugging Tests
+
+### Enable Debug Logs
+
+```typescript
+const server = new TypedWSServer(events, {
+  debug: true, // Enable debug logging
+})
+```
+
+### Inspect Messages
+
+```typescript
+client.on('message', (event) => {
+  console.log('Received:', event)
+})
+```
+
+### Use Timeouts Wisely
+
+```typescript
+// Increase timeout for slow tests
+it('slow test', async () => {
+  // test code
+}, { timeout: 10000 }) // 10 seconds
+```
+
+## Example Test Suite
+
+See the complete test suite for @mdrv/wsx:
+
+- [Client Tests](https://github.com/mdrv/wsx/tree/main/src/client/__tests__)
+- [Server Tests](https://github.com/mdrv/wsx/tree/main/src/server/__tests__)
+- [Integration Tests](https://github.com/mdrv/wsx/tree/main/tests/integration)
+- [E2E Tests](https://github.com/mdrv/wsx/tree/main/tests/e2e)
+- [Test Utilities](https://github.com/mdrv/wsx/tree/main/tests/utils)
+
+## Next Steps
+
+- [API Reference](/wsx/api) - Complete API documentation
+- [Examples](/wsx/examples) - Working code examples
+- [Validation Guide](/wsx/guides/validation) - Learn about schema validation
